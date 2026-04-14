@@ -21,9 +21,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -41,40 +43,46 @@ class ResultEventActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val resultBus = remember { ResultEventBus() }
-
-            Scaffold { paddingValues ->
-
-                val backStack = rememberNavBackStack(Home)
-
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.padding(paddingValues),
-                    onBack = { backStack.removeLastOrNull() },
-                    entryProvider = entryProvider {
-                        entry<Home> {
-                            val viewModel = viewModel<HomeViewModel>(key = Home.toString())
-                            ResultEffect<Person>(resultBus) { person ->
-                                viewModel.person = person
-                            }
-
-                            val person = viewModel.person
-                            HomeScreen(
-                                person = person,
-                                onNext = { backStack.add(PersonDetailsForm()) }
-                            )
-                        }
-                        entry<PersonDetailsForm> {
-                            PersonDetailsScreen(
-                                onSubmit = { person ->
-                                    resultBus.sendResult<Person>(result = person)
-                                    backStack.removeLastOrNull()
-                                }
-                            )
-                        }
-                    }
-                )
-            }
+            ResultEventContent()
         }
+    }
+}
+
+@Composable
+@Preview
+fun ResultEventContent() {
+    val resultBus = remember { ResultEventBus() }
+
+    Scaffold { paddingValues ->
+
+        val backStack = rememberNavBackStack(Home)
+
+        NavDisplay(
+            backStack = backStack,
+            modifier = Modifier.padding(paddingValues),
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+                entry<Home> {
+                    val viewModel = viewModel<HomeViewModel>(key = Home.toString())
+                    ResultEffect<Person>(resultBus) { person ->
+                        viewModel.person = person
+                    }
+
+                    val person = viewModel.person
+                    HomeScreen(
+                        person = person,
+                        onNext = { backStack.add(PersonDetailsForm()) }
+                    )
+                }
+                entry<PersonDetailsForm> {
+                    PersonDetailsScreen(
+                        onSubmit = { person ->
+                            resultBus.sendResult<Person>(result = person)
+                            backStack.removeLastOrNull()
+                        }
+                    )
+                }
+            }
+        )
     }
 }

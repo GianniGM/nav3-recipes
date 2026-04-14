@@ -12,10 +12,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -46,66 +48,81 @@ class AdvancedDeeplinkAppActivity: ComponentActivity() {
             buildFullPath = isNewTask
         )
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(*(syntheticBackStack.toTypedArray()))
-
-            Scaffold(
-                topBar = {
-                    // top app bar to display up button
-                    TopAppBar(
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        title = { stringResource(R.string.app_name)},
-                        navigationIcon = {
-                            /**
-                             * Up button should never exit your app. Do not display it
-                             * on the root Screen.
-                             */
-                            if (backStack.last() != Home) {
-                                IconButton(onClick = {
-                                    backStack.navigateUp(
-                                        this@AdvancedDeeplinkAppActivity,
-                                        this@AdvancedDeeplinkAppActivity
-                                    )
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.outline_arrow_upward_24),
-                                        contentDescription = "Up Button",
-                                    )
-                                }
-                            }
-                        },
+            AdvancedDeeplinkAppContent(
+                syntheticBackStack = syntheticBackStack,
+                onNavigateUp = { backStack ->
+                    backStack.navigateUp(
+                        this@AdvancedDeeplinkAppActivity,
+                        this@AdvancedDeeplinkAppActivity
                     )
-                },
-            ) { innerPadding ->
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull()},
-                    modifier = Modifier.padding(innerPadding),
-                    entryProvider = entryProvider {
-                        entry<Home> { key ->
-                            EntryScreen(key.screenTitle) {
-                                PaddedButton("See Users") {
-                                    backStack.add(Users)
-                                }
-                            }
-                        }
-                        entry<Users> { key ->
-                            EntryScreen(key.screenTitle) {
-                                FriendsList(LIST_USERS) { user ->
-                                    backStack.add(UserDetail(user))
-                                }
-                            }
-                        }
-                        entry<UserDetail> { result ->
-                            EntryScreen(result.screenTitle) {
-                                FriendsList(listOf(result.user))
-                            }
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview
+fun AdvancedDeeplinkAppContent(
+    syntheticBackStack: List<NavKey> = listOf(Home),
+    onNavigateUp: (NavBackStack<NavKey>) -> Unit = {}
+) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(*(syntheticBackStack.toTypedArray()))
+
+    Scaffold(
+        topBar = {
+            // top app bar to display up button
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = { stringResource(R.string.app_name) },
+                navigationIcon = {
+                    /**
+                     * Up button should never exit your app. Do not display it
+                     * on the root Screen.
+                     */
+                    if (backStack.size > 0 && backStack.last() != Home) {
+                        IconButton(onClick = {
+                            onNavigateUp(backStack)
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_arrow_upward_24),
+                                contentDescription = "Up Button",
+                            )
                         }
                     }
-                )
+                },
+            )
+        },
+    ) { innerPadding ->
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            modifier = Modifier.padding(innerPadding),
+            entryProvider = entryProvider {
+                entry<Home> { key ->
+                    EntryScreen(key.screenTitle) {
+                        PaddedButton("See Users") {
+                            backStack.add(Users)
+                        }
+                    }
+                }
+                entry<Users> { key ->
+                    EntryScreen(key.screenTitle) {
+                        FriendsList(LIST_USERS) { user ->
+                            backStack.add(UserDetail(user))
+                        }
+                    }
+                }
+                entry<UserDetail> { result ->
+                    EntryScreen(result.screenTitle) {
+                        FriendsList(listOf(result.user))
+                    }
+                }
             }
-        }
+        )
     }
 }

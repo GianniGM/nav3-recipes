@@ -23,9 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
@@ -38,47 +40,53 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 import kotlinx.serialization.Serializable
 
 @Serializable
-private data object RouteA : NavKey
+internal data object RouteA : NavKey
 
 @Serializable
-private data class RouteB(val id: String) : NavKey
+internal data class RouteB(val id: String) : NavKey
 
 class BottomSheetActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(RouteA)
-            val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                sceneStrategies = listOf(bottomSheetStrategy),
-                entryProvider = entryProvider {
-                    entry<RouteA> {
-                        ContentGreen("Welcome to Nav3") {
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(RouteB("123"))
-                            }) {
-                                Text("Click to open bottom sheet")
-                            }
-                        }
-                    }
-                    entry<RouteB>(
-                        metadata = BottomSheetSceneStrategy.bottomSheet()
-                    ) { key ->
-                        ContentBlue(
-                            title = "Route id: ${key.id}",
-                            modifier = Modifier.clip(
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                        )
-                    }
-                }
-            )
+            BottomSheetContent()
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview
+fun BottomSheetContent() {
+    val backStack = rememberNavBackStack(RouteA)
+    val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        sceneStrategies = listOf(bottomSheetStrategy),
+        entryProvider = entryProvider {
+            entry<RouteA> {
+                ContentGreen("Welcome to Nav3") {
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(RouteB("123"))
+                    }) {
+                        Text("Click to open bottom sheet")
+                    }
+                }
+            }
+            entry<RouteB>(
+                metadata = BottomSheetSceneStrategy.bottomSheet()
+            ) { key ->
+                ContentBlue(
+                    title = "Route id: ${key.id}",
+                    modifier = Modifier.clip(
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                )
+            }
+        }
+    )
 }

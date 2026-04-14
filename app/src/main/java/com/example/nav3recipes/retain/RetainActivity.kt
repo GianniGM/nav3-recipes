@@ -9,11 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.retain.RetainedValuesStore
 import androidx.compose.runtime.retain.RetainedValuesStoreRegistry
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.retain.retainRetainedValuesStoreRegistry
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -32,56 +32,60 @@ class RetainActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = remember { mutableStateListOf<Any>(RouteA) }
+            RetainContent()
+        }
+    }
+}
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryDecorators = listOf(
-                    rememberRetainedValuesStoreNavEntryDecorator()
-                ),
-                entryProvider = { key ->
-                    when (key) {
-                        is RouteA -> NavEntry(key) {
-                            ContentGreen("Nav3 with retain support") {
-                                Text("Retained value: ${retainValue()}")
-                                Button(onClick = dropUnlessResumed {
-                                    backStack.add(RouteB(1))
-                                }) {
-                                    Text("Click to navigate")
-                                }
-                            }
-                        }
+@Composable
+@Preview
+fun RetainContent() {
+    val backStack = remember { mutableStateListOf<Any>(RouteA) }
 
-                        is RouteB -> NavEntry(key) {
-                            ContentBlue("Route id: ${key.id}") {
-                                Text("Retained value: ${retainValue()}")
-                                Button(onClick = dropUnlessResumed {
-                                    backStack.add(RouteB(key.id + 1))
-                                }) {
-                                    Text("Click to navigate")
-                                }
-                            }
-                        }
-
-                        else -> {
-                            error("Unknown route: $key")
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberRetainedValuesStoreNavEntryDecorator()
+        ),
+        entryProvider = { key ->
+            when (key) {
+                is RouteA -> NavEntry(key) {
+                    ContentGreen("Nav3 with retain support") {
+                        Text("Retained value: ${retainValue()}")
+                        Button(onClick = dropUnlessResumed {
+                            backStack.add(RouteB(1))
+                        }) {
+                            Text("Click to navigate")
                         }
                     }
                 }
-            )
+
+                is RouteB -> NavEntry(key) {
+                    ContentBlue("Route id: ${key.id}") {
+                        Text("Retained value: ${retainValue()}")
+                        Button(onClick = dropUnlessResumed {
+                            backStack.add(RouteB(key.id + 1))
+                        }) {
+                            Text("Click to navigate")
+                        }
+                    }
+                }
+
+                else -> {
+                    error("Unknown route: $key")
+                }
+            }
         }
-    }
-
-    @Composable
-    private fun retainValue() = retain { "Retained Value ${retainCount++}" }
-
-    private companion object {
-        // Counter to track how many values have been retained
-        // Resets on process death.
-        var retainCount = 0
-    }
+    )
 }
+
+@Composable
+private fun retainValue() = retain { "Retained Value ${retainCount++}" }
+
+// Counter to track how many values have been retained
+// Resets on process death.
+private var retainCount = 0
 
 /**
  * Returns a [RetainedValuesStoreNavEntryDecorator] that is remembered across recompositions backed

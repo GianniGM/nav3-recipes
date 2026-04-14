@@ -29,8 +29,10 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -73,42 +75,49 @@ class MultipleStacksActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val navigationState = rememberNavigationState(
-                startRoute = RouteA,
-                topLevelRoutes = TOP_LEVEL_ROUTES.keys
-            )
+            MultipleStacksContent()
+        }
+    }
+}
 
-            val navigator = remember { Navigator(navigationState) }
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+@Preview
+fun MultipleStacksContent() {
+    val navigationState = rememberNavigationState(
+        startRoute = RouteA,
+        topLevelRoutes = TOP_LEVEL_ROUTES.keys
+    )
 
-            val entryProvider = entryProvider {
-                featureASection(onSubRouteClick = { navigator.navigate(RouteA1) })
-                featureBSection(onSubRouteClick = { navigator.navigate(RouteB1) })
-                featureCSection(onSubRouteClick = { navigator.navigate(RouteC1) })
-            }
+    val navigator = remember { Navigator(navigationState) }
 
-            Scaffold(bottomBar = {
-                NavigationBar {
-                    TOP_LEVEL_ROUTES.forEach { (key, value) ->
-                        val isSelected = key == navigationState.topLevelRoute
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = { navigator.navigate(key) },
-                            icon = {
-                                Icon(
-                                    imageVector = value.icon,
-                                    contentDescription = value.description
-                                )
-                            },
-                            label = { Text(value.description) }
+    val entryProvider = entryProvider {
+        featureASection(onSubRouteClick = { navigator.navigate(RouteA1) })
+        featureBSection(onSubRouteClick = { navigator.navigate(RouteB1) })
+        featureCSection(onSubRouteClick = { navigator.navigate(RouteC1) })
+    }
+
+    Scaffold(bottomBar = {
+        NavigationBar {
+            TOP_LEVEL_ROUTES.forEach { (key, value) ->
+                val isSelected = key == navigationState.topLevelRoute
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { navigator.navigate(key) },
+                    icon = {
+                        Icon(
+                            imageVector = value.icon,
+                            contentDescription = value.description
                         )
-                    }
-                }
-            }) {
-                NavDisplay(
-                    entries = navigationState.toDecoratedEntries(entryProvider),
-                    onBack = { navigator.goBack() }
+                    },
+                    label = { Text(value.description) }
                 )
             }
         }
+    }) {
+        NavDisplay(
+            entries = navigationState.toDecoratedEntries(entryProvider),
+            onBack = { navigator.goBack() }
+        )
     }
 }

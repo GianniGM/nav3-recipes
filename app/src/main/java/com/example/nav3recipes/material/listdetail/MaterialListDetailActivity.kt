@@ -27,8 +27,10 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
@@ -43,74 +45,79 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 import kotlinx.serialization.Serializable
 
 @Serializable
-private object ConversationList : NavKey
+internal object ConversationList : NavKey
 
 @Serializable
-private data class ConversationDetail(val id: String) : NavKey
+internal data class ConversationDetail(val id: String) : NavKey
 
 @Serializable
-private data object Profile : NavKey
+internal data object Profile : NavKey
 
 class MaterialListDetailActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         setContent {
-
-            val backStack = rememberNavBackStack(ConversationList)
-
-            // Override the defaults so that there isn't a horizontal space between the panes.
-            // See b/418201867
-            val windowAdaptiveInfo = currentWindowAdaptiveInfo()
-            val directive = remember(windowAdaptiveInfo) {
-                calculatePaneScaffoldDirective(windowAdaptiveInfo)
-                    .copy(horizontalPartitionSpacerSize = 0.dp)
-            }
-            val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                sceneStrategies = listOf(listDetailStrategy),
-                entryProvider = entryProvider {
-                    entry<ConversationList>(
-                        metadata = ListDetailSceneStrategy.listPane(
-                            detailPlaceholder = {
-                                ContentYellow("Choose a conversation from the list")
-                            }
-                        )
-                    ) {
-                        ContentRed("Welcome to Nav3") {
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(ConversationDetail("ABC"))
-                            }) {
-                                Text("View conversation")
-                            }
-                        }
-                    }
-                    entry<ConversationDetail>(
-                        metadata = ListDetailSceneStrategy.detailPane()
-                    ) { conversation ->
-                        ContentBlue("Conversation ${conversation.id} ") {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(onClick = dropUnlessResumed {
-                                    backStack.add(Profile)
-                                }) {
-                                    Text("View profile")
-                                }
-                            }
-                        }
-                    }
-                    entry<Profile>(
-                        metadata = ListDetailSceneStrategy.extraPane()
-                    ) {
-                        ContentGreen("Profile")
-                    }
-                }
-            )
+            MaterialListDetailContent()
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+@Preview
+fun MaterialListDetailContent() {
+    val backStack = rememberNavBackStack(ConversationList)
+
+    // Override the defaults so that there isn't a horizontal space between the panes.
+    // See b/418201867
+    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    val directive = remember(windowAdaptiveInfo) {
+        calculatePaneScaffoldDirective(windowAdaptiveInfo)
+            .copy(horizontalPartitionSpacerSize = 0.dp)
+    }
+    val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        sceneStrategies = listOf(listDetailStrategy),
+        entryProvider = entryProvider {
+            entry<ConversationList>(
+                metadata = ListDetailSceneStrategy.listPane(
+                    detailPlaceholder = {
+                        ContentYellow("Choose a conversation from the list")
+                    }
+                )
+            ) {
+                ContentRed("Welcome to Nav3") {
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(ConversationDetail("ABC"))
+                    }) {
+                        Text("View conversation")
+                    }
+                }
+            }
+            entry<ConversationDetail>(
+                metadata = ListDetailSceneStrategy.detailPane()
+            ) { conversation ->
+                ContentBlue("Conversation ${conversation.id} ") {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Button(onClick = dropUnlessResumed {
+                            backStack.add(Profile)
+                        }) {
+                            Text("View profile")
+                        }
+                    }
+                }
+            }
+            entry<Profile>(
+                metadata = ListDetailSceneStrategy.extraPane()
+            ) {
+                ContentGreen("Profile")
+            }
+        }
+    )
 }

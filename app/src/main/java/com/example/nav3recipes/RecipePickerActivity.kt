@@ -39,6 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.example.nav3recipes.animations.AnimatedActivity
@@ -74,12 +75,12 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 /**
  * Activity to show all available recipes and allow users to launch each one.
  */
-private class Recipe(
+internal class Recipe(
     val name: String,
     val activityClass: Class<out Activity>
 )
 
-private class Heading(val name: String)
+internal class Heading(val name: String)
 
 private val recipes = listOf(
     Heading("Basic API recipes"),
@@ -139,61 +140,68 @@ class RecipePickerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setEdgeToEdgeConfig()
         setContent {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = {
-                    TopAppBar(
-                        title = { Text("Recipes") },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }) { innerPadding ->
-                RecipeList(padding = innerPadding)
-            }
-        }
-    }
-
-
-    @Composable
-    fun RecipeList(padding: PaddingValues) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(recipes) { item ->
-                when(item){
-                    is Recipe -> {
-                        ListItem(
-                            headlineContent = { Text(item.name) },
-                            modifier = Modifier.clickable(onClick = dropUnlessResumed {
-                                item.start()
-                            })
-                        )
-                    }
-                    is Heading -> {
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = item.name,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        )
-                    }
-                }
-            }
+            RecipePickerContent(onRecipeClick = { it.start() })
         }
     }
 
     private fun Recipe.start() {
         val intent = Intent(this@RecipePickerActivity, this.activityClass)
         startActivity(intent)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview
+internal fun RecipePickerContent( onRecipeClick: (Recipe) -> Unit = {}) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Recipes") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }) { innerPadding ->
+        RecipeList(padding = innerPadding, onRecipeClick = onRecipeClick)
+    }
+}
+
+@Composable
+internal fun RecipeList(padding: PaddingValues, onRecipeClick: (Recipe) -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(recipes) { item ->
+            when (item) {
+                is Recipe -> {
+                    ListItem(
+                        headlineContent = { Text(item.name) },
+                        modifier = Modifier.clickable(onClick = dropUnlessResumed {
+                            onRecipeClick(item)
+                        })
+                    )
+                }
+
+                is Heading -> {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = item.name,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                }
+            }
+        }
     }
 }

@@ -21,7 +21,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
@@ -37,34 +39,40 @@ class ResultStateActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val resultStore = rememberResultStore()
-
-            Scaffold { paddingValues ->
-                val backStack = rememberNavBackStack(Home)
-
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.padding(paddingValues),
-                    onBack = { backStack.removeLastOrNull() },
-                    entryProvider = entryProvider {
-                        entry<Home> {
-                            val person = resultStore.getResultState<Person?>()
-                            HomeScreen(
-                                person = person,
-                                onNext = { backStack.add(PersonDetailsForm()) }
-                            )
-                        }
-                        entry<PersonDetailsForm> {
-                            PersonDetailsScreen(
-                                onSubmit = { person ->
-                                    resultStore.setResult<Person>(result = person)
-                                    backStack.removeLastOrNull()
-                                }
-                            )
-                        }
-                    }
-                )
-            }
+            ResultStateContent()
         }
+    }
+}
+
+@Composable
+@Preview
+fun ResultStateContent() {
+    val resultStore = rememberResultStore()
+
+    Scaffold { paddingValues ->
+        val backStack = rememberNavBackStack(Home)
+
+        NavDisplay(
+            backStack = backStack,
+            modifier = Modifier.padding(paddingValues),
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+                entry<Home> {
+                    val person = resultStore.getResultState<Person?>()
+                    HomeScreen(
+                        person = person,
+                        onNext = { backStack.add(PersonDetailsForm()) }
+                    )
+                }
+                entry<PersonDetailsForm> {
+                    PersonDetailsScreen(
+                        onSubmit = { person ->
+                            resultStore.setResult<Person>(result = person)
+                            backStack.removeLastOrNull()
+                        }
+                    )
+                }
+            }
+        )
     }
 }

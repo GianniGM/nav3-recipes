@@ -22,9 +22,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -50,37 +52,43 @@ class DialogActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(RouteA)
-            val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                sceneStrategies = listOf(dialogStrategy),
-                entryProvider = entryProvider {
-                    entry<RouteA> {
-                        ContentGreen("Welcome to Nav3") {
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(RouteB("123"))
-                            }) {
-                                Text("Click to open dialog")
-                            }
-                        }
-                    }
-                    entry<RouteB>(
-                        metadata = DialogSceneStrategy.dialog(
-                            DialogProperties(windowTitle = "Route B dialog")
-                        )
-                    ) { key ->
-                        ContentBlue(
-                            title = "Route id: ${key.id}",
-                            modifier = Modifier.clip(
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                        )
-                    }
-                }
-            )
+            DialogContent()
         }
     }
+}
+
+@Composable
+@Preview
+fun DialogContent() {
+    val backStack = rememberNavBackStack(RouteA)
+    val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        sceneStrategies = listOf(dialogStrategy),
+        entryProvider = entryProvider {
+            entry<RouteA> {
+                ContentGreen("Welcome to Nav3") {
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(RouteB("123"))
+                    }) {
+                        Text("Click to open dialog")
+                    }
+                }
+            }
+            entry<RouteB>(
+                metadata = DialogSceneStrategy.dialog(
+                    DialogProperties(windowTitle = "Route B dialog")
+                )
+            ) { key ->
+                ContentBlue(
+                    title = "Route id: ${key.id}",
+                    modifier = Modifier.clip(
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                )
+            }
+        }
+    )
 }

@@ -21,9 +21,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,13 +42,13 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-private data object ParentScreen : NavKey
+internal data object ParentScreen : NavKey
 
 @Serializable
-private data object ChildScreen : NavKey
+internal data object ChildScreen : NavKey
 
 @Serializable
-private data object StandaloneScreen : NavKey
+internal data object StandaloneScreen : NavKey
 
 class SharedViewModelActivity : ComponentActivity() {
 
@@ -55,68 +57,74 @@ class SharedViewModelActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val backStack = rememberNavBackStack(ParentScreen)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberSharedViewModelStoreNavEntryDecorator(),
-                ),
-                entryProvider = entryProvider {
-                    entry<ParentScreen>(
-                        clazzContentKey = { key -> key.toContentKey() },
-                    ) {
-                        val viewModel = viewModel<CounterViewModel>()
-
-                        ContentRed("Parent screen") {
-                            Button(onClick = dropUnlessResumed { viewModel.count++ }) {
-                                Text("Count: ${viewModel.count}")
-                            }
-                            Button(onClick = dropUnlessResumed { backStack.add(ChildScreen) }) {
-                                Text("View child screen")
-                            }
-                        }
-                    }
-                    entry<ChildScreen>(
-                        metadata = SharedViewModelStoreNavEntryDecorator.parent(
-                            ParentScreen.toContentKey()
-                        )
-                    ) {
-                        val parentViewModel = viewModel<CounterViewModel>(
-                            viewModelStoreOwner = LocalSharedViewModelStoreOwner.current
-                        )
-
-                        val standaloneViewModel = viewModel<CounterViewModel>()
-
-                        ContentBlue("Child screen") {
-                            Button(onClick = dropUnlessResumed { parentViewModel.count++ }) {
-                                Text("Parent count: ${parentViewModel.count}")
-                            }
-                            Button(onClick = dropUnlessResumed { standaloneViewModel.count++ }) {
-                                Text("Standalone Count: ${standaloneViewModel.count}")
-                            }
-                            Button(onClick = dropUnlessResumed { backStack.add(StandaloneScreen) }) {
-                                Text("View standalone screen")
-                            }
-                        }
-                    }
-                    entry<StandaloneScreen> {
-                        val viewModel = viewModel<CounterViewModel>()
-
-                        ContentGreen("Standalone screen") {
-                            Button(onClick = dropUnlessResumed {
-                                viewModel.count++
-                            }) {
-                                Text("Count: ${viewModel.count}")
-                            }
-                        }
-                    }
-                }
-            )
+            SharedViewModelContent()
         }
     }
+}
+
+@Composable
+@Preview
+fun SharedViewModelContent() {
+    val backStack = rememberNavBackStack(ParentScreen)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberSharedViewModelStoreNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<ParentScreen>(
+                clazzContentKey = { key -> key.toContentKey() },
+            ) {
+                val viewModel = viewModel<CounterViewModel>()
+
+                ContentRed("Parent screen") {
+                    Button(onClick = dropUnlessResumed { viewModel.count++ }) {
+                        Text("Count: ${viewModel.count}")
+                    }
+                    Button(onClick = dropUnlessResumed { backStack.add(ChildScreen) }) {
+                        Text("View child screen")
+                    }
+                }
+            }
+            entry<ChildScreen>(
+                metadata = SharedViewModelStoreNavEntryDecorator.parent(
+                    ParentScreen.toContentKey()
+                )
+            ) {
+                val parentViewModel = viewModel<CounterViewModel>(
+                    viewModelStoreOwner = LocalSharedViewModelStoreOwner.current
+                )
+
+                val standaloneViewModel = viewModel<CounterViewModel>()
+
+                ContentBlue("Child screen") {
+                    Button(onClick = dropUnlessResumed { parentViewModel.count++ }) {
+                        Text("Parent count: ${parentViewModel.count}")
+                    }
+                    Button(onClick = dropUnlessResumed { standaloneViewModel.count++ }) {
+                        Text("Standalone Count: ${standaloneViewModel.count}")
+                    }
+                    Button(onClick = dropUnlessResumed { backStack.add(StandaloneScreen) }) {
+                        Text("View standalone screen")
+                    }
+                }
+            }
+            entry<StandaloneScreen> {
+                val viewModel = viewModel<CounterViewModel>()
+
+                ContentGreen("Standalone screen") {
+                    Button(onClick = dropUnlessResumed {
+                        viewModel.count++
+                    }) {
+                        Text("Count: ${viewModel.count}")
+                    }
+                }
+            }
+        }
+    )
 }
 
 fun NavKey.toContentKey() = this.toString()

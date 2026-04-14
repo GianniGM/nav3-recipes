@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSerializable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -58,13 +59,13 @@ sealed class ConditionalNavKey(val requiresLogin: Boolean = false) : NavKey
  * Key representing home screen
  */
 @Serializable
-private data object Home : ConditionalNavKey()
+internal data object Home : ConditionalNavKey()
 
 /**
  * Key representing profile screen that is only accessible once the user has logged in
  */
 @Serializable
-private data object Profile : ConditionalNavKey(requiresLogin = true)
+internal data object Profile : ConditionalNavKey(requiresLogin = true)
 
 /**
  * Key representing login screen
@@ -72,7 +73,7 @@ private data object Profile : ConditionalNavKey(requiresLogin = true)
  * @param redirectToKey - navigation key to redirect to after successful login
  */
 @Serializable
-private data class Login(
+internal data class Login(
     val redirectToKey: ConditionalNavKey? = null
 ) : ConditionalNavKey()
 
@@ -81,62 +82,67 @@ class ConditionalActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            ConditionalContent()
+        }
+    }
+}
 
-            val backStack = rememberNavBackStack<ConditionalNavKey>(Home)
-            var isLoggedIn by rememberSaveable {
-                mutableStateOf(false)
-            }
-            val navigator = remember {
-                Navigator(
-                    backStack = backStack,
-                    onNavigateToRestrictedKey = { redirectToKey -> Login(redirectToKey) },
-                    isLoggedIn = { isLoggedIn }
-                )
-            }
+@Composable
+@Preview
+fun ConditionalContent() {
+    val backStack = rememberNavBackStack<ConditionalNavKey>(Home)
+    var isLoggedIn by rememberSaveable {
+        mutableStateOf(false)
+    }
+    val navigator = remember {
+        Navigator(
+            backStack = backStack,
+            onNavigateToRestrictedKey = { redirectToKey -> Login(redirectToKey) },
+            isLoggedIn = { isLoggedIn }
+        )
+    }
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = { navigator.goBack() },
-                entryProvider = entryProvider {
-                    entry<Home> {
-                        ContentGreen("Welcome to Nav3. Logged in? ${isLoggedIn}") {
-                            Column {
-                                Button(onClick = dropUnlessResumed { navigator.navigate(Profile) }) {
-                                    Text("Profile")
-                                }
-                                Button(onClick = dropUnlessResumed { navigator.navigate(Login()) }) {
-                                    Text("Login")
-                                }
-                            }
+    NavDisplay(
+        backStack = backStack,
+        onBack = { navigator.goBack() },
+        entryProvider = entryProvider {
+            entry<Home> {
+                ContentGreen("Welcome to Nav3. Logged in? ${isLoggedIn}") {
+                    Column {
+                        Button(onClick = dropUnlessResumed { navigator.navigate(Profile) }) {
+                            Text("Profile")
                         }
-                    }
-                    entry<Profile> {
-                        ContentBlue("Profile screen (only accessible once logged in)") {
-                            Button(onClick = dropUnlessResumed {
-                                isLoggedIn = false
-                                navigator.navigate(Home)
-                            }) {
-                                Text("Logout")
-                            }
-                        }
-                    }
-                    entry<Login> { key ->
-                        ContentYellow("Login screen. Logged in? $isLoggedIn") {
-                            Button(onClick = dropUnlessResumed {
-                                isLoggedIn = true
-                                key.redirectToKey?.let { targetKey ->
-                                    backStack.remove(key)
-                                    navigator.navigate(targetKey)
-                                }
-                            }) {
-                                Text("Login")
-                            }
+                        Button(onClick = dropUnlessResumed { navigator.navigate(Login()) }) {
+                            Text("Login")
                         }
                     }
                 }
-            )
+            }
+            entry<Profile> {
+                ContentBlue("Profile screen (only accessible once logged in)") {
+                    Button(onClick = dropUnlessResumed {
+                        isLoggedIn = false
+                        navigator.navigate(Home)
+                    }) {
+                        Text("Logout")
+                    }
+                }
+            }
+            entry<Login> { key ->
+                ContentYellow("Login screen. Logged in? $isLoggedIn") {
+                    Button(onClick = dropUnlessResumed {
+                        isLoggedIn = true
+                        key.redirectToKey?.let { targetKey ->
+                            backStack.remove(key)
+                            navigator.navigate(targetKey)
+                        }
+                    }) {
+                        Text("Login")
+                    }
+                }
+            }
         }
-    }
+    )
 }
 
 

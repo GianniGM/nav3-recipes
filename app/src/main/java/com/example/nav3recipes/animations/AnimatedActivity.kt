@@ -14,6 +14,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -28,13 +30,13 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-private data object ScreenA : NavKey
+data object ScreenA : NavKey
 
 @Serializable
-private data object ScreenB : NavKey
+ data object ScreenB : NavKey
 
 @Serializable
-private data object ScreenC : NavKey
+ data object ScreenC : NavKey
 
 
 class AnimatedActivity : ComponentActivity() {
@@ -43,90 +45,95 @@ class AnimatedActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-
-            val backStack = rememberNavBackStack(ScreenA)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<ScreenA> {
-                        ContentOrange("This is Screen A") {
-                            Button(onClick = dropUnlessResumed { backStack.add(ScreenB) }) {
-                                Text("Go to Screen B")
-                            }
-                        }
-                    }
-                    entry<ScreenB> {
-                        ContentMauve("This is Screen B") {
-                            Button(onClick = dropUnlessResumed { backStack.add(ScreenC) }) {
-                                Text("Go to Screen C")
-                            }
-                        }
-                    }
-                    entry<ScreenC>(
-                        metadata = metadata {
-                            // Slide new content up, keeping the old content in place underneath
-                            put(NavDisplay.TransitionKey) {
-                                slideInVertically(
-                                    initialOffsetY = { it },
-                                    animationSpec = tween(1000)
-                                ) togetherWith ExitTransition.KeepUntilTransitionsFinished
-                            }
-
-                            // Slide old content down, revealing the new content in place underneath
-                            put(NavDisplay.PopTransitionKey) {
-                                EnterTransition.None togetherWith
-                                        slideOutVertically(
-                                            targetOffsetY = { it },
-                                            animationSpec = tween(1000)
-                                        )
-                            }
-
-                            // Slide old content down, revealing the new content in place underneath
-                            put(NavDisplay.PredictivePopTransitionKey) {
-                                EnterTransition.None togetherWith
-                                        slideOutVertically(
-                                            targetOffsetY = { it },
-                                            animationSpec = tween(1000)
-                                        )
-                            }
-                        }
-                    ) {
-                        ContentGreen("This is Screen C")
-                    }
-                },
-                transitionSpec = {
-                    // Slide in from right when navigating forward
-                    slideInHorizontally(
-                        initialOffsetX = { it },
-                        animationSpec = tween(1000)
-                    ) togetherWith slideOutHorizontally(
-                        targetOffsetX = { -it },
-                        animationSpec = tween(1000)
-                    )
-                },
-                popTransitionSpec = {
-                    // Slide in from left when navigating back
-                    slideInHorizontally(
-                        initialOffsetX = { -it },
-                        animationSpec = tween(1000)
-                    ) togetherWith slideOutHorizontally(
-                        targetOffsetX = { it },
-                        animationSpec = tween(1000)
-                    )
-                },
-                predictivePopTransitionSpec = {
-                    // Slide in from left when navigating back
-                    slideInHorizontally(
-                        initialOffsetX = { -it },
-                        animationSpec = tween(1000)
-                    ) togetherWith slideOutHorizontally(
-                        targetOffsetX = { it },
-                        animationSpec = tween(1000)
-                    )
-                }
-            )
+            AnimatedContent()
         }
     }
+}
+
+@Composable
+@Preview
+fun AnimatedContent() {
+    val backStack = rememberNavBackStack(ScreenA)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<ScreenA> {
+                ContentOrange("This is Screen A") {
+                    Button(onClick = dropUnlessResumed { backStack.add(ScreenB) }) {
+                        Text("Go to Screen B")
+                    }
+                }
+            }
+            entry<ScreenB> {
+                ContentMauve("This is Screen B") {
+                    Button(onClick = dropUnlessResumed { backStack.add(ScreenC) }) {
+                        Text("Go to Screen C")
+                    }
+                }
+            }
+            entry<ScreenC>(
+                metadata = metadata {
+                    // Slide new content up, keeping the old content in place underneath
+                    put(NavDisplay.TransitionKey) {
+                        slideInVertically(
+                            initialOffsetY = { it },
+                            animationSpec = tween(1000)
+                        ) togetherWith ExitTransition.KeepUntilTransitionsFinished
+                    }
+
+                    // Slide old content down, revealing the new content in place underneath
+                    put(NavDisplay.PopTransitionKey) {
+                        EnterTransition.None togetherWith
+                                slideOutVertically(
+                                    targetOffsetY = { it },
+                                    animationSpec = tween(1000)
+                                )
+                    }
+
+                    // Slide old content down, revealing the new content in place underneath
+                    put(NavDisplay.PredictivePopTransitionKey) {
+                        EnterTransition.None togetherWith
+                                slideOutVertically(
+                                    targetOffsetY = { it },
+                                    animationSpec = tween(1000)
+                                )
+                    }
+                }
+            ) {
+                ContentGreen("This is Screen C")
+            }
+        },
+        transitionSpec = {
+            // Slide in from right when navigating forward
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(1000)
+            ) togetherWith slideOutHorizontally(
+                targetOffsetX = { -it },
+                animationSpec = tween(1000)
+            )
+        },
+        popTransitionSpec = {
+            // Slide in from left when navigating back
+            slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(1000)
+            ) togetherWith slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(1000)
+            )
+        },
+        predictivePopTransitionSpec = {
+            // Slide in from left when navigating back
+            slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(1000)
+            ) togetherWith slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(1000)
+            )
+        }
+    )
 }

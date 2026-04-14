@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -47,48 +48,54 @@ class BasicViewModelsActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = remember { mutableStateListOf<Any>(RouteA) }
+            BasicViewModelsContent()
+        }
+    }
+}
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                // In order to add the `ViewModelStoreNavEntryDecorator` (see comment below for why)
-                // we also need to add the default `NavEntryDecorator`s as well. These provide
-                // extra information to the entry's content to enable it to display correctly
-                // and save its state.
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator()
-                ),
-                entryProvider = entryProvider {
-                    entry<RouteA> {
-                        ContentGreen("Welcome to Nav3") {
-                            LazyColumn {
-                                items(10) { i ->
-                                    Button(onClick = dropUnlessResumed {
-                                        backStack.add(RouteB("$i"))
-                                    }) {
-                                        Text("$i")
-                                    }
-                                }
+@Composable
+@Preview
+fun BasicViewModelsContent() {
+    val backStack = remember { mutableStateListOf<Any>(RouteA) }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        // In order to add the `ViewModelStoreNavEntryDecorator` (see comment below for why)
+        // we also need to add the default `NavEntryDecorator`s as well. These provide
+        // extra information to the entry's content to enable it to display correctly
+        // and save its state.
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            entry<RouteA> {
+                ContentGreen("Welcome to Nav3") {
+                    LazyColumn {
+                        items(10) { i ->
+                            Button(onClick = dropUnlessResumed {
+                                backStack.add(RouteB("$i"))
+                            }) {
+                                Text("$i")
                             }
                         }
                     }
-                    entry<RouteB> { key ->
-                        // Note: We need a new ViewModel for every new RouteB instance. Usually
-                        // we would need to supply a `key` String that is unique to the
-                        // instance, however, the ViewModelStoreNavEntryDecorator (supplied
-                        // above) does this for us, using `NavEntry.contentKey` to uniquely
-                        // identify the viewModel.
-                        //
-                        // tl;dr: Make sure you use rememberViewModelStoreNavEntryDecorator()
-                        // if you want a new ViewModel for each new navigation key instance.
-                        ScreenB(viewModel = viewModel(factory = RouteBViewModel.Factory(key)))
-                    }
                 }
-            )
+            }
+            entry<RouteB> { key ->
+                // Note: We need a new ViewModel for every new RouteB instance. Usually
+                // we would need to supply a `key` String that is unique to the
+                // instance, however, the ViewModelStoreNavEntryDecorator (supplied
+                // above) does this for us, using `NavEntry.contentKey` to uniquely
+                // identify the viewModel.
+                //
+                // tl;dr: Make sure you use rememberViewModelStoreNavEntryDecorator()
+                // if you want a new ViewModel for each new navigation key instance.
+                ScreenB(viewModel = viewModel(factory = RouteBViewModel.Factory(key)))
+            }
         }
-    }
+    )
 }
 
 @Composable

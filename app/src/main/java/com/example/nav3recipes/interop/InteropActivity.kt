@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.compose.AndroidFragment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -22,10 +24,10 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 import kotlinx.serialization.Serializable
 
 @Serializable
-private data object FragmentRoute : NavKey
+data object FragmentRoute : NavKey
 
 @Serializable
-private data class ViewRoute(val id: String) : NavKey
+data class ViewRoute(val id: String) : NavKey
 
 class InteropActivity : FragmentActivity() {
 
@@ -34,34 +36,41 @@ class InteropActivity : FragmentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(FragmentRoute)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<FragmentRoute> {
-                        Column(Modifier.fillMaxSize().wrapContentSize()) {
-                            AndroidFragment<MyCustomFragment>()
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(ViewRoute("123"))
-                            }) {
-                                Text("Go to View")
-                            }
-                        }
-                    }
-                    entry<ViewRoute> { key ->
-                        AndroidView(
-                            modifier = Modifier.fillMaxSize().wrapContentSize(),
-                            factory = { context ->
-                                TextView(context).apply {
-                                    text = "My View with key: ${key.id}"
-                                }
-                            }
-                        )
-                    }
-                }
-            )
+            InteropContent()
         }
     }
+}
+
+@SuppressLint("SetTextI18n")
+@Composable
+@Preview
+fun InteropContent() {
+    val backStack = rememberNavBackStack(FragmentRoute)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<FragmentRoute> {
+                Column(Modifier.fillMaxSize().wrapContentSize()) {
+                    AndroidFragment<MyCustomFragment>()
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(ViewRoute("123"))
+                    }) {
+                        Text("Go to View")
+                    }
+                }
+            }
+            entry<ViewRoute> { key ->
+                AndroidView(
+                    modifier = Modifier.fillMaxSize().wrapContentSize(),
+                    factory = { context ->
+                        TextView(context).apply {
+                            text = "My View with key: ${key.id}"
+                        }
+                    }
+                )
+            }
+        }
+    )
 }

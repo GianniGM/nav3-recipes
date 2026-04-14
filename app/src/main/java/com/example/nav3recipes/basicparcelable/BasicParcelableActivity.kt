@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
@@ -63,29 +64,35 @@ class BasicParcelableActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberParcelableBackStack<Route>(RouteA)
+            BasicParcelableContent()
+        }
+    }
+}
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = { key ->
-                    when (key) {
-                        is RouteA -> NavEntry(key) {
-                            ContentGreen("Welcome to Nav3") {
-                                Button(onClick = dropUnlessResumed {
-                                    backStack.add(RouteB("123"))
-                                }) {
-                                    Text("Click to navigate")
-                                }
-                            }
-                        }
+@Composable
+@Preview
+fun BasicParcelableContent() {
+    val backStack = rememberParcelableBackStack<Route>(RouteA)
 
-                        is RouteB -> NavEntry(key) {
-                            ContentBlue("Route id: ${key.id} ")
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = { key ->
+            when (key) {
+                is RouteA -> NavEntry(key) {
+                    ContentGreen("Welcome to Nav3") {
+                        Button(onClick = dropUnlessResumed {
+                            backStack.add(RouteB("123"))
+                        }) {
+                            Text("Click to navigate")
                         }
                     }
                 }
-            )
+
+                is RouteB -> NavEntry(key) {
+                    ContentBlue("Route id: ${key.id} ")
+                }
+            }
         }
-    }
+    )
 }

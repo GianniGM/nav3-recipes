@@ -29,6 +29,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -60,56 +62,62 @@ class CommonUiActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val topLevelBackStack = remember { TopLevelBackStack<Any>(Home) }
+            CommonUiContent()
+        }
+    }
+}
 
-            Scaffold(
-                bottomBar = {
-                    NavigationBar {
-                        TOP_LEVEL_ROUTES.forEach { topLevelRoute ->
+@Composable
+@Preview
+fun CommonUiContent() {
+    val topLevelBackStack = remember { TopLevelBackStack<Any>(Home) }
 
-                            val isSelected = topLevelRoute == topLevelBackStack.topLevelKey
-                            NavigationBarItem(
-                                selected = isSelected,
-                                onClick = {
-                                    topLevelBackStack.addTopLevel(topLevelRoute)
-                                },
-                                icon = {
-                                    Icon(
-                                        imageVector = topLevelRoute.icon,
-                                        contentDescription = null
-                                    )
-                                }
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                TOP_LEVEL_ROUTES.forEach { topLevelRoute ->
+
+                    val isSelected = topLevelRoute == topLevelBackStack.topLevelKey
+                    NavigationBarItem(
+                        selected = isSelected,
+                        onClick = {
+                            topLevelBackStack.addTopLevel(topLevelRoute)
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = topLevelRoute.icon,
+                                contentDescription = null
                             )
+                        }
+                    )
+                }
+            }
+        }
+    ) { _ ->
+        NavDisplay(
+            backStack = topLevelBackStack.backStack,
+            onBack = { topLevelBackStack.removeLast() },
+            entryProvider = entryProvider {
+                entry<Home> {
+                    ContentRed("Home screen")
+                }
+                entry<ChatList> {
+                    ContentGreen("Chat list screen") {
+                        Button(onClick = dropUnlessResumed {
+                            topLevelBackStack.add(ChatDetail)
+                        }) {
+                            Text("Go to conversation")
                         }
                     }
                 }
-            ) { _ ->
-                NavDisplay(
-                    backStack = topLevelBackStack.backStack,
-                    onBack = { topLevelBackStack.removeLast() },
-                    entryProvider = entryProvider {
-                        entry<Home>{
-                            ContentRed("Home screen")
-                        }
-                        entry<ChatList>{
-                            ContentGreen("Chat list screen"){
-                                Button(onClick = dropUnlessResumed {
-                                    topLevelBackStack.add(ChatDetail)
-                                }) {
-                                    Text("Go to conversation")
-                                }
-                            }
-                        }
-                        entry<ChatDetail>{
-                            ContentBlue("Chat detail screen")
-                        }
-                        entry<Camera>{
-                            ContentPurple("Camera screen")
-                        }
-                    },
-                )
-            }
-        }
+                entry<ChatDetail> {
+                    ContentBlue("Chat detail screen")
+                }
+                entry<Camera> {
+                    ContentPurple("Camera screen")
+                }
+            },
+        )
     }
 }
 

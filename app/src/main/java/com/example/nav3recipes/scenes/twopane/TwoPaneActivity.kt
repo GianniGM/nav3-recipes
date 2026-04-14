@@ -25,8 +25,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -41,13 +43,13 @@ import com.example.nav3recipes.ui.theme.colors
 import kotlinx.serialization.Serializable
 
 @Serializable
-private object Home : NavKey
+internal object Home : NavKey
 
 @Serializable
-private data class Product(val id: Int) : NavKey
+internal data class Product(val id: Int) : NavKey
 
 @Serializable
-private data object Profile : NavKey
+internal data object Profile : NavKey
 
 class TwoPaneActivity : ComponentActivity() {
 
@@ -56,53 +58,59 @@ class TwoPaneActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val backStack = rememberNavBackStack(Home)
-            val twoPaneStrategy = rememberTwoPaneSceneStrategy<NavKey>()
+            TwoPaneContent()
+        }
+    }
+}
 
-            SharedTransitionLayout {
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
-                    sceneStrategies = listOf(twoPaneStrategy),
-                    sharedTransitionScope = this,
-                    entryProvider = entryProvider {
-                        entry<Home>(
-                            metadata = TwoPaneScene.twoPane()
-                        ) {
-                            ContentRed("Welcome to Nav3") {
-                                Button(onClick = { backStack.addProductRoute(1) }) {
-                                    Text("View the first product")
-                                }
-                            }
-                        }
-                        entry<Product>(
-                            metadata = TwoPaneScene.twoPane()
-                        ) { product ->
-                            ContentBase(
-                                "Product ${product.id} ",
-                                Modifier.background(colors[product.id % colors.size])
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Button(onClick = dropUnlessResumed {
-                                        backStack.addProductRoute(product.id + 1)
-                                    }) {
-                                        Text("View the next product")
-                                    }
-                                    Button(onClick = dropUnlessResumed {
-                                        backStack.add(Profile)
-                                    }) {
-                                        Text("View profile")
-                                    }
-                                }
-                            }
-                        }
-                        entry<Profile> {
-                            ContentGreen("Profile (single pane only)")
+@Composable
+@Preview
+fun TwoPaneContent() {
+    val backStack = rememberNavBackStack(Home)
+    val twoPaneStrategy = rememberTwoPaneSceneStrategy<NavKey>()
+
+    SharedTransitionLayout {
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            sceneStrategies = listOf(twoPaneStrategy),
+            sharedTransitionScope = this,
+            entryProvider = entryProvider {
+                entry<Home>(
+                    metadata = TwoPaneScene.twoPane()
+                ) {
+                    ContentRed("Welcome to Nav3") {
+                        Button(onClick = { backStack.addProductRoute(1) }) {
+                            Text("View the first product")
                         }
                     }
-                )
+                }
+                entry<Product>(
+                    metadata = TwoPaneScene.twoPane()
+                ) { product ->
+                    ContentBase(
+                        "Product ${product.id} ",
+                        Modifier.background(colors[product.id % colors.size])
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Button(onClick = dropUnlessResumed {
+                                backStack.addProductRoute(product.id + 1)
+                            }) {
+                                Text("View the next product")
+                            }
+                            Button(onClick = dropUnlessResumed {
+                                backStack.add(Profile)
+                            }) {
+                                Text("View profile")
+                            }
+                        }
+                    }
+                }
+                entry<Profile> {
+                    ContentGreen("Profile (single pane only)")
+                }
             }
-        }
+        )
     }
 }
 

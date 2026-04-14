@@ -28,8 +28,10 @@ import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation3.SupportingPaneSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberSupportingPaneSceneStrategy
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
@@ -43,76 +45,81 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 import kotlinx.serialization.Serializable
 
 @Serializable
-private object MainVideo : NavKey
+internal object MainVideo : NavKey
 
 @Serializable
-private data object RelatedVideos : NavKey
+internal data object RelatedVideos : NavKey
 
 @Serializable
-private data object Profile : NavKey
+internal data object Profile : NavKey
 
 class MaterialSupportingPaneActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         setContent {
-
-            val backStack = rememberNavBackStack(MainVideo)
-
-            // Override the defaults so that there isn't a horizontal or vertical space between the panes.
-            // See b/444438086
-            val windowAdaptiveInfo = currentWindowAdaptiveInfo()
-            val directive = remember(windowAdaptiveInfo) {
-                calculatePaneScaffoldDirective(windowAdaptiveInfo)
-                    .copy(horizontalPartitionSpacerSize = 0.dp, verticalPartitionSpacerSize = 0.dp)
-            }
-
-            // Override the defaults so that the supporting pane can be dismissed by pressing back.
-            // See b/445826749
-            val supportingPaneStrategy = rememberSupportingPaneSceneStrategy<NavKey>(
-                backNavigationBehavior = BackNavigationBehavior.PopUntilCurrentDestinationChange,
-                directive = directive
-            )
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                sceneStrategies = listOf(supportingPaneStrategy),
-                entryProvider = entryProvider {
-                    entry<MainVideo>(
-                        metadata = SupportingPaneSceneStrategy.mainPane()
-                    ) {
-                        ContentRed("Video content") {
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(RelatedVideos)
-                            }) {
-                                Text("View related videos")
-                            }
-                        }
-                    }
-                    entry<RelatedVideos>(
-                        metadata = SupportingPaneSceneStrategy.supportingPane()
-                    ) {
-                        ContentBlue("Related videos") {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(onClick = dropUnlessResumed {
-                                    backStack.add(Profile)
-                                }) {
-                                    Text("View profile")
-                                }
-                            }
-                        }
-                    }
-                    entry<Profile>(
-                        metadata = SupportingPaneSceneStrategy.extraPane()
-                    ) {
-                        ContentGreen("Profile")
-                    }
-                }
-            )
+            MaterialSupportingPaneContent()
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+@Preview
+fun MaterialSupportingPaneContent() {
+    val backStack = rememberNavBackStack(MainVideo)
+
+    // Override the defaults so that there isn't a horizontal or vertical space between the panes.
+    // See b/444438086
+    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    val directive = remember(windowAdaptiveInfo) {
+        calculatePaneScaffoldDirective(windowAdaptiveInfo)
+            .copy(horizontalPartitionSpacerSize = 0.dp, verticalPartitionSpacerSize = 0.dp)
+    }
+
+    // Override the defaults so that the supporting pane can be dismissed by pressing back.
+    // See b/445826749
+    val supportingPaneStrategy = rememberSupportingPaneSceneStrategy<NavKey>(
+        backNavigationBehavior = BackNavigationBehavior.PopUntilCurrentDestinationChange,
+        directive = directive
+    )
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        sceneStrategies = listOf(supportingPaneStrategy),
+        entryProvider = entryProvider {
+            entry<MainVideo>(
+                metadata = SupportingPaneSceneStrategy.mainPane()
+            ) {
+                ContentRed("Video content") {
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(RelatedVideos)
+                    }) {
+                        Text("View related videos")
+                    }
+                }
+            }
+            entry<RelatedVideos>(
+                metadata = SupportingPaneSceneStrategy.supportingPane()
+            ) {
+                ContentBlue("Related videos") {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Button(onClick = dropUnlessResumed {
+                            backStack.add(Profile)
+                        }) {
+                            Text("View profile")
+                        }
+                    }
+                }
+            }
+            entry<Profile>(
+                metadata = SupportingPaneSceneStrategy.extraPane()
+            ) {
+                ContentGreen("Profile")
+            }
+        }
+    )
 }
