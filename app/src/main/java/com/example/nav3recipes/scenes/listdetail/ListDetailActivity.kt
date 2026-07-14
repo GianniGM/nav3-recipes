@@ -21,6 +21,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -31,6 +36,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEvent
 import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 import kotlinx.serialization.Serializable
 
@@ -85,6 +91,19 @@ fun ListDetailContent() {
                 sceneStrategies = listOf(listDetailStrategy),
                 sharedTransitionScope = this,
                 modifier = Modifier.padding(paddingValues),
+                predictivePopTransitionSpec = { swipeEdge ->
+                    when (swipeEdge) {
+                        NavigationEvent.EDGE_LEFT -> {
+                            slideInHorizontally { -it } togetherWith slideOutHorizontally { it }
+                        }
+                        NavigationEvent.EDGE_RIGHT -> {
+                            slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                        }
+                        else -> { // EDGE_NONE
+                            fadeIn() togetherWith scaleOut(targetScale = 0.8f)
+                        }
+                    }
+                },
                 entryProvider = entryProvider {
                     entry<ConversationList>(
                         metadata = ListDetailScene.listPane()
