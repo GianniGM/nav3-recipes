@@ -4,17 +4,23 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelectable
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.espresso.Espresso
+import androidx.test.espresso.IdlingPolicies
+import androidx.test.espresso.action.ViewActions.pressBack
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import com.example.nav3recipes.migration.atomic.begin.BeginAtomicMigrationActivity
 import com.example.nav3recipes.migration.atomic.end.EndAtomicMigrationActivity
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
+import java.util.concurrent.TimeUnit
 
 /**
  * Instrumented navigation tests for the start and end states of the atomic migration guide.
@@ -34,6 +40,12 @@ class AtomicMigrationTest(activityClass: Class<out ComponentActivity>) {
                 arrayOf(EndAtomicMigrationActivity::class.java)
             )
         }
+    }
+
+    @Before
+    fun setup() {
+        IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS)
+        IdlingPolicies.setIdlingResourceTimeout(60, TimeUnit.SECONDS)
     }
 
     @Test
@@ -124,16 +136,14 @@ class AtomicMigrationTest(activityClass: Class<out ComponentActivity>) {
         }
     }
 
-    /**
-     * TODO: Investigate why these dialog tests sometimes fail.
-     */
     @Test
     fun navigateToDialogD_onA_showsDialogContentAndDismisses() {
         composeTestRule.apply {
 
             onNodeWithText("Open dialog D").performClick()
             onNodeWithText("Route D title (dialog)").assertExists()
-            Espresso.pressBack()
+            Espresso.onView(isRoot()).inRoot(isDialog()).perform(pressBack())
+            onNodeWithText("Route D title (dialog)").assertDoesNotExist()
             onNodeWithText("Route A title").assertExists()
         }
     }
@@ -146,7 +156,8 @@ class AtomicMigrationTest(activityClass: Class<out ComponentActivity>) {
 
             onNodeWithText("Open dialog D").performClick()
             onNodeWithText("Route D title (dialog)").assertExists()
-            Espresso.pressBack()
+            Espresso.onView(isRoot()).inRoot(isDialog()).perform(pressBack())
+            onNodeWithText("Route D title (dialog)").assertDoesNotExist()
             onNodeWithText("Route B title").assertExists()
         }
     }
@@ -160,7 +171,8 @@ class AtomicMigrationTest(activityClass: Class<out ComponentActivity>) {
 
             onNodeWithText("Open dialog D").performClick()
             onNodeWithText("Route D title (dialog)").assertExists()
-            Espresso.pressBack()
+            Espresso.onView(isRoot()).inRoot(isDialog()).perform(pressBack())
+            onNodeWithText("Route D title (dialog)").assertDoesNotExist()
             onNodeWithText("Route C title").assertExists()
         }
     }

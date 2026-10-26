@@ -39,13 +39,18 @@ dependencyResolutionManagement {
         mavenCentral()
         // Uncomment and change the build ID if you need to use snapshot artifacts.
         // See androidx.dev for full instructions.
-        /*maven {
-            url = uri("https://androidx.dev/snapshots/builds/<build_id>/artifacts/repository")
-        }*/
+        // Reset uri back to "https://androidx.dev/snapshots/builds/<build_id>/artifacts/repository"
+        // and comment out when no longer using snapshot artifacts.
+        maven {
+            url = uri("https://androidx.dev/snapshots/builds/15953794/artifacts/repository")
+        }
     }
 }
 
 rootProject.name = "Nav3Recipes"
 include(":app")
-include(":advanceddeeplinkapp")
+include(":syntheticbackstackapp")
 include(":common")
+include(":dynamicfeature:installtime")
+include(":dynamicfeature:ondemand")
+include(":metroapp")

@@ -45,6 +45,11 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.Nav3Recipes"/>
         <activity
+            android:name=".lifecycleowner.LifecycleOwnerActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
             android:name=".commonui.CommonUiActivity"
             android:exported="true"
             android:label="@string/app_name"
@@ -97,12 +102,22 @@
             android:exported="true"
             android:theme="@style/Theme.Nav3Recipes"/>
         <activity
+            android:name=".modular.hilt.HiltDeepLinkActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
             android:name=".modular.hilt.HiltModularActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Nav3Recipes"/>
         <activity
             android:name=".modular.koin.KoinModularActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".modular.koin.KoinDeepLinkActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Nav3Recipes"/>
@@ -118,6 +133,11 @@
             android:theme="@style/Theme.Nav3Recipes"/>
         <activity
             android:name=".results.state.ResultStateActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".results.serializable.ResultSerializableActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Nav3Recipes"/>
@@ -142,7 +162,17 @@
             android:exported="true"
             android:theme="@style/Theme.Nav3Recipes"/>
         <activity
-            android:name=".deeplink.basic.CreateDeepLinkActivity"
+            android:name=".deeplink.handlerequests.staticuri.StaticUriDeepLinkActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes">
+        </activity>
+        <activity
+            android:name=".deeplink.handlerequests.staticuri.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes">
+        </activity>
+        <activity
+            android:name=".deeplink.handlerequests.uriarguments.UriWithArgumentsDeepLinkActivity"
             android:exported="true"
             android:theme="@style/Theme.Nav3Recipes">
         </activity>
@@ -151,7 +181,7 @@
             android:theme="@style/Theme.Nav3Recipes">
         </activity>
         <activity
-            android:name=".deeplink.basic.MainActivity"
+            android:name=".deeplink.handlerequests.uriarguments.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Nav3Recipes">
             <intent-filter android:autoVerify="true">
@@ -188,7 +218,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".deeplink.advanced.AdvancedCreateDeepLinkActivity"
+            android:name=".deeplink.handlerequests.syntheticbackstack.SyntheticBackStackDeepLinkActivity"
             android:exported="true"
             android:theme="@style/Theme.Nav3Recipes">
         </activity>
@@ -209,6 +239,47 @@
         </activity>
         <activity
             android:name=".dialogscenedecorator.DialogSceneDecoratorActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".dynamicfeature.DynamicFeatureActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".conditionaltransitions.ConditionalTransitionsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.matcher.CustomDeepLinkMatcherActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.matcher.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.serializer.DeepLinkSerializerActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.serializer.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes">
+        </activity>
+        <activity
+            android:name=".deeplink.usecases.filter.CompositeFilterDeepLinkActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.filter.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.deeplinkkey.DeepLinkKeyActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Nav3Recipes"/>
+        <activity
+            android:name=".deeplink.usecases.deeplinkkey.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Nav3Recipes"/>
     </application>

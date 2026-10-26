@@ -15,12 +15,19 @@ These are the recipes and what they demonstrate.
 ### Basic API usage
 - **[Basic](app/src/main/java/com/example/nav3recipes/basic)**: Shows most basic API usage.
 - **[Saveable back stack](app/src/main/java/com/example/nav3recipes/basicsaveable)**: As above, with a persistent back stack.
+- **[Parcelable back stack](app/src/main/java/com/example/nav3recipes/basicparcelable)**: As above, but with a persistent back stack of `Parcelable` routes.
 - **[Entry provider DSL](app/src/main/java/com/example/nav3recipes/basicdsl)**: As above, using the entryProvider DSL.
+- **[Lifecycle Owner](app/src/main/java/com/example/nav3recipes/lifecycleowner)**: Shows how to observe and use `LocalLifecycleOwner` within entry content.
 
 ### Deep links
-Read the [guide to deeplinking](docs/deeplink-guide.md). Upvote [this issue](https://issuetracker.google.com/470282247) if you would like an API for deeplinks.
-- **[Basic](app/src/main/java/com/example/nav3recipes/deeplink/basic)**: Shows how to parse a deep link URL from an Android Intent into a navigation key.
-- **[Advanced](app/src/main/java/com/example/nav3recipes/deeplink/advanced)**: Shows how to handle deep links with a synthetic back stack and correct "Up" navigation behavior.
+Read the [guide to deeplinking](docs/deeplink-guide.md).
+- **[Static Uri](/app/src/main/java/com/example/nav3recipes/deeplink/handlerequests/staticuri)**: Shows how to handle deep links with a static Uri using `UriDeepLinkMatcher`.
+- **[Uri with Arguments](/app/src/main/java/com/example/nav3recipes/deeplink/handlerequests/uriarguments)**: Shows how to handle deep link with uri arguments using `UriDeepLinkMatcher`.
+- **[Synthetic BackStack](/app/src/main/java/com/example/nav3recipes/deeplink/handlerequests/syntheticbackstack)**: Shows how to deep link between apps with a synthetic back stack using `DeepLinkMatcher.withBackStack` and correct "Up" navigation behavior.
+- **[Custom DeepLinkMatcher](/app/src/main/java/com/example/nav3recipes/deeplink/usecases/matcher)**: Demonstrates how to create a custom `DeepLinkMatcher` to parse deep links from `DeepLinkRequest` extras.
+- **[Uri with Non-Primitive Arguments](/app/src/main/java/com/example/nav3recipes/deeplink/usecases/serializer)**: Demonstrates how to use a custom `DeepLinkSerializer` for URI deep link keys with non-primitive arguments.
+- **[Composite DeepLink Filters](/app/src/main/java/com/example/nav3recipes/deeplink/usecases/filter)**: Demonstrates how to combine multiple `DeepLinkMatcher.Filter` instances using infix functions (`and`, `or`).
+- **[DeepLinkKey](/app/src/main/java/com/example/nav3recipes/deeplink/usecases/deeplinkkey)**: Demonstrates how to associate deep link URI patterns directly with navigation key definitions using a `DeepLinkKey` interface.
 
 ### Scenes
 #### Use built-in Scenes
@@ -38,8 +45,13 @@ Examples showing how to use the layouts provided by the [Compose Material3 Adapt
 
 Note: If you find a bug or have a feature request for Material3 Adaptive Scenes [please file it here](https://issuetracker.google.com/issues/new?component=1467081). Don't file an issue on this repository.
 
+### Scene Decorators
+- **[Dialog Scene Decorator](app/src/main/java/com/example/nav3recipes/dialogscenedecorator)**: Shows how to use a `DialogSceneDecoratorStrategy` to display a scene in a dialog.
+- **[Responsive Navigation Scene Decorator](app/src/main/java/com/example/nav3recipes/navscenedecorator)**: Demonstrates how to add UI elements such as top app bars and navigation bars or rails using the scene decorator API.
+
 ### Animations
 - **[Animations](app/src/main/java/com/example/nav3recipes/animations)**: Shows how to override the default animations for all destinations and a single destination.
+- **[Conditional transitions](app/src/main/java/com/example/nav3recipes/conditionaltransitions)**: Demonstrates how to conditionally select slide transition directions based on pairs of initial and target navigation keys.
 
 ### Common back stack behavior
 - **[Common navigation UI](app/src/main/java/com/example/nav3recipes/commonui)**: A common navigation toolbar where each item in the toolbar navigates to a top level destination.
@@ -51,12 +63,15 @@ Note: If you find a bug or have a feature request for Material3 Adaptive Scenes 
 ### Architecture
 - **[Hilt - Modularized navigation code](app/src/main/java/com/example/nav3recipes/modular/hilt)**: Demonstrates how to decouple navigation code into separate modules (uses Dagger/Hilt for DI).
 - **[Koin - Modularized navigation code](app/src/main/java/com/example/nav3recipes/modular/koin)**: Demonstrates how to decouple navigation code into separate modules (uses Koin for DI).
+- **[Metro - Modularized navigation code](metroapp/src/main/java/com/example/nav3recipes/modular/metro)**: Demonstrates how to decouple navigation code into separate modules (uses Metro for DI).
+- **[Dynamic feature navigation](app/src/main/java/com/example/nav3recipes/dynamicfeature)**: Demonstrates how to integrate navigation code with Dynamic Feature Module.
 
 ### Working with ViewModels
 #### Passing navigation arguments
 - **[Basic ViewModel](app/src/main/java/com/example/nav3recipes/passingarguments/viewmodels/basic)**: Navigation arguments are passed to a ViewModel constructed using `viewModel()`
 - **[Hilt injected ViewModel](app/src/main/java/com/example/nav3recipes/passingarguments/viewmodels/hilt)**: Navigation arguments are passed to a ViewModel constructed using `hiltViewModel()`
 - **[Koin injected ViewModel](app/src/main/java/com/example/nav3recipes/passingarguments/viewmodels/koin)**: Navigation arguments are passed to a ViewModel constructed using `koinViewModel()`
+- **[Metro injected ViewModel](metroapp/src/main/java/com/example/nav3recipes/passingarguments/viewmodels/metro)**: Navigation arguments are passed to a ViewModel constructed using `assistedMetroViewModel()`
 
 #### Sharing a ViewModel between screens
 - **[Shared ViewModel](app/src/main/java/com/example/nav3recipes/sharedviewmodel)**: Demonstrates how to share a `ViewModel` between different screens (entries) in Navigation 3 using a custom `NavEntryDecorator`.
@@ -67,6 +82,7 @@ Note: If you find a bug or have a feature request for Material3 Adaptive Scenes 
 ### Returning Results
 - **[Returning Results as Events](app/src/main/java/com/example/nav3recipes/results/event)**: Returning results as events to content in another NavEntry.
 - **[Returning Results as State](app/src/main/java/com/example/nav3recipes/results/state)**: Returning results as state stored in a CompositionLocal.
+- **[Returning Results as Serializable State](app/src/main/java/com/example/nav3recipes/results/serializable)**: Returning results as state that survives configuration changes and process death using Kotlin Serialization.
 
 ### Interop
 - **[Fragment and View Interop](app/src/main/java/com/example/nav3recipes/interop)**: Demonstrates how to use Fragment and Views in Navigation3.

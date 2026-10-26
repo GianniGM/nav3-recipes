@@ -29,6 +29,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.runtime.result.LocalResultEventBus
+import androidx.navigation3.runtime.result.ResultEffect
+import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.nav3recipes.results.common.Home
 import com.example.nav3recipes.results.common.HomeScreen
@@ -36,10 +40,12 @@ import com.example.nav3recipes.results.common.HomeViewModel
 import com.example.nav3recipes.results.common.Person
 import com.example.nav3recipes.results.common.PersonDetailsForm
 import com.example.nav3recipes.results.common.PersonDetailsScreen
+import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 
 class ResultEventActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -61,10 +67,13 @@ fun ResultEventContent() {
             backStack = backStack,
             modifier = Modifier.padding(paddingValues),
             onBack = { backStack.removeLastOrNull() },
-            entryProvider = entryProvider {
+            entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberResultEventBusNavEntryDecorator()
+                    ),entryProvider = entryProvider {
                 entry<Home> {
                     val viewModel = viewModel<HomeViewModel>(key = Home.toString())
-                    ResultEffect<Person>(resultBus) { person ->
+                    ResultEffect<Person> { person ->
                         viewModel.person = person
                     }
 
@@ -75,7 +84,7 @@ fun ResultEventContent() {
                     )
                 }
                 entry<PersonDetailsForm> {
-                    PersonDetailsScreen(
+                    val resultBus = LocalResultEventBus.currentPersonDetailsScreen(
                         onSubmit = { person ->
                             resultBus.sendResult<Person>(result = person)
                             backStack.removeLastOrNull()

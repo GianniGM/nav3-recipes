@@ -1,0 +1,25 @@
+# Deep Link Recipes
+
+This module contains the main recipes for deep linking with Navigation3.
+
+## Recipe structure
+
+The deep link module consists of two main packages:
+
+### 1. usecases
+Shows common cases for customizing deep link components
+- `matcher` - a custom `DeepLinkMatcher` to parse deep links from `DeepLinkRequest` extras
+- `serializer` - custom `DeepLinkSerializer` for URI deep link keys with non-primitive arguments
+- `filter` - composite `DeepLinkMatcher.Filter` operators combining filters with infix functions (`and`, `or`)
+- `deeplinkkey` - associate deep link URI patterns directly with navigation keys using a `DeepLinkKey` interface
+
+### 2. handlerequests
+Shows how to handle different types of deep link requests
+- `staticuri` - handles deep links with a static Uri using `UriDeepLinkMatcher`.
+- `uriwitharguments` - handles deep link with Uri arguments using `UriDeepLinkMatcher`
+- `syntheticbackstack` - deep link between apps with a synthetic back stack using `DeepLinkMatcher.withBackStack` and correct "Up" navigation behavior
+
+### 3. modular
+- [`hilt`](../modular/hilt) - multi-module deep linking with Dagger/Hilt, contributing `BackStackMatcher` instances from feature modules to build synthetic back stacks from incoming `Intent`s
+- [`koin`](../modular/koin) - multi-module deep linking with Koin, contributing `BackStackMatcher` instances from feature modules to build synthetic back stacks from incoming `Intent`s
+- [`metro`](/metroapp/src/main/java/com/example/nav3recipes/modular/metro) - multi-module deep linking with Metro, contributing `BackStackMatcher` instances from feature modules to build synthetic back stacks from incoming `Intent`s

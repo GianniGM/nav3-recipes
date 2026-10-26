@@ -26,53 +26,57 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.runtime.result.LocalResultEventBus
+import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.nav3recipes.results.common.Home
 import com.example.nav3recipes.results.common.HomeScreen
 import com.example.nav3recipes.results.common.Person
 import com.example.nav3recipes.results.common.PersonDetailsForm
 import com.example.nav3recipes.results.common.PersonDetailsScreen
+import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 
 class ResultStateActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         setContent {
-            ResultStateContent()
-        }
-    }
-}
-
-@Composable
-@Preview
-fun ResultStateContent() {
-    val resultStore = rememberResultStore()
-
-    Scaffold { paddingValues ->
-        val backStack = rememberNavBackStack(Home)
-
-        NavDisplay(
-            backStack = backStack,
-            modifier = Modifier.padding(paddingValues),
-            onBack = { backStack.removeLastOrNull() },
-            entryProvider = entryProvider {
-                entry<Home> {
-                    val person = resultStore.getResultState<Person?>()
-                    HomeScreen(
-                        person = person,
-                        onNext = { backStack.add(PersonDetailsForm()) }
-                    )
-                }
-                entry<PersonDetailsForm> {
-                    PersonDetailsScreen(
-                        onSubmit = { person ->
-                            resultStore.setResult<Person>(result = person)
-                            backStack.removeLastOrNull()
+            Scaffold { paddingValues ->
+                val backStack = rememberNavBackStack(Home)
+                NavDisplay(
+                    backStack = backStack,
+                    modifier = Modifier.padding(paddingValues),
+                    onBack = { backStack.removeLastOrNull() },
+                    entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberResultEventBusNavEntryDecorator()
+                    ),
+                    entryProvider = entryProvider {
+                        entry<Home> {
+                            val resultState = LocalResultEventBus
+                                .current
+                                .conflateAsState<Person?>(null)
+                            val person = resultState.value
+                            HomeScreen(
+                                person = person,
+                                onNext = { backStack.add(PersonDetailsForm()) }
+                            )
                         }
-                    )
-                }
+                        entry<PersonDetailsForm> {
+                            val resultBus = LocalResultEventBus.current
+                            PersonDetailsScreen(
+                                onSubmit = { person ->
+                                    resultBus.sendResult(result = person)
+                                    backStack.removeLastOrNull()
+                                }
+                            )
+                        }
+                    }
+                )
             }
-        )
+        }
     }
 }

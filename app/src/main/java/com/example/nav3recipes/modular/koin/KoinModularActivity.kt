@@ -55,6 +55,7 @@ class KoinModularActivity : ComponentActivity(), AndroidScopeComponent, KoinComp
         super.onCreate(savedInstanceState)
 
         setEdgeToEdgeConfig()
+        navigator.handleDeepLink(intent)
         setContent {
             KoinModularContent(
                 backStack = navigator.backStack,

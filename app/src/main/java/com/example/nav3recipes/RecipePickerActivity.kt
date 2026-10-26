@@ -22,13 +22,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -50,21 +49,30 @@ import com.example.nav3recipes.basicsaveable.BasicSaveableActivity
 import com.example.nav3recipes.bottomsheet.BottomSheetActivity
 import com.example.nav3recipes.commonui.CommonUiActivity
 import com.example.nav3recipes.conditional.ConditionalActivity
-import com.example.nav3recipes.deeplink.advanced.AdvancedCreateDeepLinkActivity
-import com.example.nav3recipes.deeplink.basic.CreateDeepLinkActivity
+import com.example.nav3recipes.conditionaltransitions.ConditionalTransitionsActivity
+import com.example.nav3recipes.deeplink.handlerequests.syntheticbackstack.SyntheticBackStackDeepLinkActivity
+import com.example.nav3recipes.deeplink.handlerequests.uriarguments.UriWithArgumentsDeepLinkActivity
+import com.example.nav3recipes.deeplink.handlerequests.staticuri.StaticUriDeepLinkActivity
+import com.example.nav3recipes.deeplink.usecases.deeplinkkey.DeepLinkKeyActivity
+import com.example.nav3recipes.deeplink.usecases.matcher.CustomDeepLinkMatcherActivity
+import com.example.nav3recipes.deeplink.usecases.serializer.DeepLinkSerializerActivity
+import com.example.nav3recipes.deeplink.usecases.filter.CompositeFilterDeepLinkActivity
 import com.example.nav3recipes.dialog.DialogActivity
 import com.example.nav3recipes.dialogscenedecorator.DialogSceneDecoratorActivity
+import com.example.nav3recipes.dynamicfeature.DynamicFeatureActivity
 import com.example.nav3recipes.interop.InteropActivity
+import com.example.nav3recipes.lifecycleowner.LifecycleOwnerActivity
 import com.example.nav3recipes.material.listdetail.MaterialListDetailActivity
 import com.example.nav3recipes.material.supportingpane.MaterialSupportingPaneActivity
-import com.example.nav3recipes.modular.hilt.HiltModularActivity
-import com.example.nav3recipes.modular.koin.KoinModularActivity
+import com.example.nav3recipes.modular.hilt.HiltDeepLinkActivity
+import com.example.nav3recipes.modular.koin.KoinDeepLinkActivity
 import com.example.nav3recipes.multiplestacks.MultipleStacksActivity
 import com.example.nav3recipes.navscenedecorator.ResponsiveNavigationSceneDecoratorActivity
 import com.example.nav3recipes.passingarguments.viewmodels.basic.BasicViewModelsActivity
 import com.example.nav3recipes.passingarguments.viewmodels.hilt.HiltViewModelsActivity
 import com.example.nav3recipes.passingarguments.viewmodels.koin.KoinViewModelsActivity
 import com.example.nav3recipes.results.event.ResultEventActivity
+import com.example.nav3recipes.results.serializable.ResultSerializableActivity
 import com.example.nav3recipes.results.state.ResultStateActivity
 import com.example.nav3recipes.retain.RetainActivity
 import com.example.nav3recipes.scenes.listdetail.ListDetailActivity
@@ -105,6 +113,7 @@ private val recipes = listOf(
 
     Heading("Animations"),
     Recipe("NavDisplay and NavEntry animations", AnimatedActivity::class.java),
+    Recipe("Conditional transition animations", ConditionalTransitionsActivity::class.java),
 
     Heading("Common use cases"),
     Recipe("Common UI", CommonUiActivity::class.java),
@@ -112,10 +121,12 @@ private val recipes = listOf(
     Recipe("Conditional navigation", ConditionalActivity::class.java),
     Recipe("Shared ViewModel", SharedViewModelActivity::class.java),
     Recipe("Retain", RetainActivity::class.java),
+    Recipe("Lifecycle Owner", LifecycleOwnerActivity::class.java),
 
     Heading("Architecture"),
-    Recipe("Hilt - Modular Navigation", HiltModularActivity::class.java),
-    Recipe("Koin - Modular Navigation", KoinModularActivity::class.java),
+    Recipe("Hilt - Modular Navigation", HiltDeepLinkActivity::class.java),
+    Recipe("Koin - Modular Navigation", KoinDeepLinkActivity::class.java),
+    Recipe("Dynamic Feature Module Navigation", DynamicFeatureActivity::class.java),
 
     Heading("Passing navigation arguments using ViewModels"),
     Recipe("Basic", BasicViewModelsActivity::class.java),
@@ -125,17 +136,22 @@ private val recipes = listOf(
     Heading("Returning Results"),
     Recipe("Return result as Event", ResultEventActivity::class.java),
     Recipe("Return result as State", ResultStateActivity::class.java),
+    Recipe("Return result as Serializable State", ResultSerializableActivity::class.java),
 
     Heading("Deeplink"),
-    Recipe("Parse Intent", CreateDeepLinkActivity::class.java),
-    Recipe("Synthetic BackStack", AdvancedCreateDeepLinkActivity::class.java),
+    Recipe("Static Uri", StaticUriDeepLinkActivity::class.java),
+    Recipe("Uri with Arguments", UriWithArgumentsDeepLinkActivity::class.java),
+    Recipe("Synthetic BackStack", SyntheticBackStackDeepLinkActivity::class.java),
+    Recipe("Custom DeepLinkMatcher", CustomDeepLinkMatcherActivity::class.java),
+    Recipe("Uri with Non-Primitive Arguments", DeepLinkSerializerActivity::class.java),
+    Recipe("Composite DeepLink Filters", CompositeFilterDeepLinkActivity::class.java),
+    Recipe("DeepLinkKey", DeepLinkKeyActivity::class.java),
 
     Heading("Interop"),
     Recipe("Fragment and View Interop", InteropActivity::class.java),
 )
 
 class RecipePickerActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setEdgeToEdgeConfig()
@@ -171,13 +187,17 @@ internal fun RecipePickerContent( onRecipeClick: (Recipe) -> Unit = {}) {
 
 @Composable
 internal fun RecipeList(padding: PaddingValues, onRecipeClick: (Recipe) -> Unit) {
-    LazyColumn(
+    LazyVerticalGrid(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(padding),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .fillMaxSize(),
+            columns = GridCells.Adaptive(minSize = 240.dp),
+            contentPadding = padding,
+        
     ) {
-        items(recipes) { item ->
+        items(recipes, span = { item ->
+                val span = if (item is Heading) maxLineSpan else 1
+                GridItemSpan(span)
+            }) { item ->
             when (item) {
                 is Recipe -> {
                     ListItem(
@@ -185,6 +205,7 @@ internal fun RecipeList(padding: PaddingValues, onRecipeClick: (Recipe) -> Unit)
                         modifier = Modifier.clickable(onClick = dropUnlessResumed {
                             onRecipeClick(item)
                         })
+                            })
                     )
                 }
 
