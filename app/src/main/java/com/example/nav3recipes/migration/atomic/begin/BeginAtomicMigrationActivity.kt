@@ -26,9 +26,11 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -74,53 +76,60 @@ class BeginAtomicMigrationActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val navController = rememberNavController()
-            val currentBackStackEntry by navController.currentBackStackEntryAsState()
+            BeginAtomicMigrationContent()
+        }
+    }
+}
 
-            Scaffold(bottomBar = {
-                NavigationBar {
-                    TOP_LEVEL_ROUTES.forEach { (key, value) ->
-                        val isSelected = currentBackStackEntry?.destination.isRouteInHierarchy(key::class)
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                navController.navigate(key, navOptions {
-                                    popUpTo(route = RouteA)
-                                })
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = value.icon,
-                                    contentDescription = value.description
-                                )
-                            },
-                            label = { Text(value.description) }
+/**
+ * Displays the starting Navigation 2 multi-stack and dialog example prior to Navigation 3 migration.
+ */
+@Composable
+@Preview
+fun BeginAtomicMigrationContent() {
+    val navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+
+    Scaffold(bottomBar = {
+        NavigationBar {
+            TOP_LEVEL_ROUTES.forEach { (key, value) ->
+                val isSelected = currentBackStackEntry?.destination.isRouteInHierarchy(key::class)
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        navController.navigate(key, navOptions {
+                            popUpTo(route = RouteA)
+                        })
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = value.icon,
+                            contentDescription = value.description
                         )
-                    }
-                }
-            })
-
-            { paddingValues ->
-                NavHost(
-                    navController = navController,
-                    startDestination = BaseRouteA,
-                    modifier = Modifier.padding(paddingValues)
-                ) {
-                    featureASection(
-                        onSubRouteClick = { navController.navigate(RouteA1) },
-                        onDialogClick = { navController.navigate(RouteD) },
-                    )
-                    featureBSection(
-                        onDetailClick = { id -> navController.navigate(RouteB1(id)) },
-                        onDialogClick = { navController.navigate(RouteD) },
-                    )
-                    featureCSection(
-                        onDialogClick = { navController.navigate(RouteD) },
-                    )
-                    dialog<RouteD> { key ->
-                        Text(modifier = Modifier.background(Color.White), text = "Route D title (dialog)")
-                    }
-                }
+                    },
+                    label = { Text(value.description) }
+                )
+            }
+        }
+    }) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = BaseRouteA,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            featureASection(
+                onSubRouteClick = { navController.navigate(RouteA1) },
+                onDialogClick = { navController.navigate(RouteD) },
+            )
+            featureBSection(
+                onDetailClick = { id -> navController.navigate(RouteB1(id)) },
+                onDialogClick = { navController.navigate(RouteD) },
+            )
+            featureCSection(
+                onDialogClick = { navController.navigate(RouteD) },
+            )
+            dialog<RouteD> { key ->
+                Text(modifier = Modifier.background(Color.White), text = "Route D title (dialog)")
             }
         }
     }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -51,31 +52,42 @@ class DeepLinkSerializerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            EntryScreen {
-                val backStack = rememberNavBackStack(Home)
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
-                    entryProvider = entryProvider {
-                        entry<Home> {
-                            HomeScreen(
-                                onAddProduct = { product, quantity ->
-                                    val serializedProduct = ProductSerializer.serialize(product)
-                                    val uriString = "https://www.nav3recipes.com/products?product=$serializedProduct&quantity=$quantity"
-                                    val intent = Intent(
-                                        this@DeepLinkSerializerActivity,
-                                        MainActivity::class.java
-                                    ).apply {
-                                        data = uriString.toUri()
-                                    }
-                                    startActivity(intent)
-                                }
-                            )
-                        }
+            DeepLinkSerializerContent(
+                onAddProduct = { product, quantity ->
+                    val serializedProduct = ProductSerializer.serialize(product)
+                    val uriString = "https://www.nav3recipes.com/products?product=$serializedProduct&quantity=$quantity"
+                    val intent = Intent(
+                        this@DeepLinkSerializerActivity,
+                        MainActivity::class.java
+                    ).apply {
+                        data = uriString.toUri()
                     }
-                )
-            }
+                    startActivity(intent)
+                }
+            )
         }
+    }
+}
+
+/**
+ * Displays the deep link custom serializer demo wrapped inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+internal fun DeepLinkSerializerContent(
+    onAddProduct: (Product, Int) -> Unit = { _, _ -> }
+) {
+    EntryScreen {
+        val backStack = rememberNavBackStack(Home)
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+                entry<Home> {
+                    HomeScreen(onAddProduct = onAddProduct)
+                }
+            }
+        )
     }
 }
 

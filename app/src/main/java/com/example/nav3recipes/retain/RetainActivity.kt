@@ -11,6 +11,7 @@ import androidx.compose.runtime.retain.RetainedValuesStore
 import androidx.compose.runtime.retain.RetainedValuesStoreRegistry
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.retain.retainRetainedValuesStoreRegistry
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
@@ -35,49 +36,56 @@ class RetainActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(RouteA)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryDecorators = listOf(
-                    rememberRetainedValuesStoreNavEntryDecorator()
-                ),
-                entryProvider = entryProvider {
-                    entry<RouteA> {
-                        ContentGreen("Nav3 with retain support") {
-                            Text("Retained value: ${retainValue()}")
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(RouteB(1))
-                            }) {
-                                Text("Click to navigate")
-                            }
-                        }
-                    }
-                    entry<RouteB> { key ->
-                        ContentBlue("Route id: ${key.id}") {
-                            Text("Retained value: ${retainValue()}")
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(RouteB(key.id + 1))
-                            }) {
-                                Text("Click to navigate")
-                            }
-                        }
-                    }
-                }
-            )
+            RetainContent()
         }
     }
-
-    @Composable
-    private fun retainValue() = retain { "Retained Value ${retainCount++}" }
-
-    private companion object {
-        // Counter to track how many values have been retained
-        // Resets on process death.
-        var retainCount = 0
-    }
 }
+
+/**
+ * Demonstrates retaining values per navigation entry across configuration changes in [NavDisplay].
+ */
+@Composable
+@Preview
+fun RetainContent() {
+    val backStack = rememberNavBackStack(RouteA)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberRetainedValuesStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            entry<RouteA> {
+                ContentGreen("Nav3 with retain support") {
+                    Text("Retained value: ${retainValue()}")
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(RouteB(1))
+                    }) {
+                        Text("Click to navigate")
+                    }
+                }
+            }
+            entry<RouteB> { key ->
+                ContentBlue("Route id: ${key.id}") {
+                    Text("Retained value: ${retainValue()}")
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(RouteB(key.id + 1))
+                    }) {
+                        Text("Click to navigate")
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun retainValue() = retain { "Retained Value ${retainCount++}" }
+
+// Counter to track how many values have been retained.
+// Resets on process death.
+private var retainCount = 0
 
 /**
  * Returns a [RetainedValuesStoreNavEntryDecorator] that is remembered across recompositions backed

@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -38,8 +40,8 @@ class MainActivity : ComponentActivity() {
         val request = DeepLinkRequest(intent)
         val compositeFilter =
             DeepLinkMatcher.actionFilter(Intent.ACTION_VIEW) and
-                    (DeepLinkMatcher.mimeTypeFilter("image/png") or
-                            DeepLinkMatcher.mimeTypeFilter("image/jpeg"))
+                (DeepLinkMatcher.mimeTypeFilter("image/png") or
+                    DeepLinkMatcher.mimeTypeFilter("image/jpeg"))
         val deepLinkMatcher = UriDeepLinkMatcher(
             VIEWER_URI_PATTERN.toUri(),
             serializer<ViewerKey>(),
@@ -50,35 +52,52 @@ class MainActivity : ComponentActivity() {
         val key = matchResult?.key ?: FallbackKey
 
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
-            NavDisplay(
-                backStack = backStack,
-                onBack = backStack::removeLastOrNull,
-                entryProvider = entryProvider {
-                    entry<ViewerKey> { key ->
-                        EntryScreen("Viewer") {
-                            TextContent(
-                                "Matched composite filter!\n\n" +
-                                    "Title: ${key.title}\n" +
-                                    "Action: ${intent.action}\n" +
-                                    "MIME Type: ${intent.type}"
-                            )
-                        }
-                    }
-                    entry<FallbackKey> {
-                        EntryScreen("Fallback Key") {
-                            TextContent(
-                                "Failed to deep link - Request did not satisfy composite filter!\n\n" +
-                                    "Required Filter:\n" +
-                                    "ACTION_VIEW and (image/png or image/jpeg)\n\n" +
-                                    "Received:\n" +
-                                    "Action: ${intent.action ?: "none"}\n" +
-                                    "MIME Type: ${intent.type ?: "none"}"
-                            )
-                        }
-                    }
-                }
+            MainContent(
+                key = key,
+                action = intent.action,
+                mimeType = intent.type
             )
         }
     }
+}
+
+/**
+ * Displays the matched composite filter deep link destination inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun MainContent(
+    key: NavKey = ViewerKey("SamplePhoto"),
+    action: String? = Intent.ACTION_VIEW,
+    mimeType: String? = "image/png"
+) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
+    NavDisplay(
+        backStack = backStack,
+        onBack = backStack::removeLastOrNull,
+        entryProvider = entryProvider {
+            entry<ViewerKey> { key ->
+                EntryScreen("Viewer") {
+                    TextContent(
+                        "Matched composite filter!\n\n" +
+                            "Title: ${key.title}\n" +
+                            "Action: $action\n" +
+                            "MIME Type: $mimeType"
+                    )
+                }
+            }
+            entry<FallbackKey> {
+                EntryScreen("Fallback Key") {
+                    TextContent(
+                        "Failed to deep link - Request did not satisfy composite filter!\n\n" +
+                            "Required Filter:\n" +
+                            "ACTION_VIEW and (image/png or image/jpeg)\n\n" +
+                            "Received:\n" +
+                            "Action: ${action ?: "none"}\n" +
+                            "MIME Type: ${mimeType ?: "none"}"
+                    )
+                }
+            }
+        }
+    )
 }

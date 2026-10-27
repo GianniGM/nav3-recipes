@@ -21,8 +21,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
@@ -40,33 +42,42 @@ class BasicActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = remember { mutableStateListOf<Any>(RouteA) }
+            BasicActivityContent()
+        }
+    }
+}
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = { key ->
-                    when (key) {
-                        is RouteA -> NavEntry(key) {
-                            ContentGreen("Welcome to Nav3") {
-                                Button(onClick = dropUnlessResumed {
-                                    backStack.add(RouteB("123"))
-                                }) {
-                                    Text("Click to navigate")
-                                }
-                            }
-                        }
+/**
+ * Demonstrates basic navigation using [NavDisplay] with a state-backed list back stack.
+ */
+@Composable
+@Preview
+fun BasicActivityContent() {
+    val backStack = remember { mutableStateListOf<Any>(RouteA) }
 
-                        is RouteB -> NavEntry(key) {
-                            ContentBlue("Route id: ${key.id} ")
-                        }
-
-                        else -> {
-                            error("Unknown route: $key")
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = { key ->
+            when (key) {
+                is RouteA -> NavEntry(key) {
+                    ContentGreen("Welcome to Nav3") {
+                        Button(onClick = dropUnlessResumed {
+                            backStack.add(RouteB("123"))
+                        }) {
+                            Text("Click to navigate")
                         }
                     }
                 }
-            )
+
+                is RouteB -> NavEntry(key) {
+                    ContentBlue("Route id: ${key.id} ")
+                }
+
+                else -> {
+                    error("Unknown route: $key")
+                }
+            }
         }
-    }
+    )
 }

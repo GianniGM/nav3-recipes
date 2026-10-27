@@ -3,6 +3,8 @@ package com.example.nav3recipes.deeplink.handlerequests.uriarguments
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -58,41 +60,50 @@ class MainActivity : ComponentActivity() {
          * STEP 5. pass the initial key to backstack
          */
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<HomeKey> { key ->
-                        EntryScreen(key.name) {
-                            TextContent("<matches exact url>")
-                        }
-                    }
-                    entry<UsersKey> { key ->
-                        EntryScreen("${key.name} : ${key.filter}") {
-                            TextContent("<matches path argument>")
-                            val list = when {
-                                key.filter.isEmpty() -> LIST_USERS
-                                key.filter == UsersKey.FILTER_OPTION_ALL -> LIST_USERS
-                                else -> LIST_USERS.take(5)
-                            }
-                            FriendsList(list)
-                        }
-                    }
-                    entry<SearchKey> { search ->
-                        EntryScreen(search.name) {
-                            TextContent("<matches query parameters, if any>")
-                            val matchingUsers = LIST_USERS.filter { user ->
-                                (search.firstName == null || user.firstName == search.firstName) &&
-                                        (search.location == null || user.location == search.location) &&
-                                        (search.ageMin == null || user.age >= search.ageMin) &&
-                                        (search.ageMax == null || user.age <= search.ageMax)
-                            }
-                            FriendsList(matchingUsers)
-                        }
-                    }
-                }
-            )
+            MainContent(key = key)
         }
     }
+}
+
+/**
+ * Displays the matched URI deep link destination inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun MainContent(key: NavKey = HomeKey) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<HomeKey> { key ->
+                EntryScreen(key.name) {
+                    TextContent("<matches exact url>")
+                }
+            }
+            entry<UsersKey> { key ->
+                EntryScreen("${key.name} : ${key.filter}") {
+                    TextContent("<matches path argument>")
+                    val list = when {
+                        key.filter.isEmpty() -> LIST_USERS
+                        key.filter == UsersKey.FILTER_OPTION_ALL -> LIST_USERS
+                        else -> LIST_USERS.take(5)
+                    }
+                    FriendsList(list)
+                }
+            }
+            entry<SearchKey> { search ->
+                EntryScreen(search.name) {
+                    TextContent("<matches query parameters, if any>")
+                    val matchingUsers = LIST_USERS.filter { user ->
+                        (search.firstName == null || user.firstName == search.firstName) &&
+                            (search.location == null || user.location == search.location) &&
+                            (search.ageMin == null || user.age >= search.ageMin) &&
+                            (search.ageMax == null || user.age <= search.ageMax)
+                    }
+                    FriendsList(matchingUsers)
+                }
+            }
+        }
+    )
 }

@@ -16,6 +16,7 @@
 
 package com.example.nav3recipes.multiplestacks
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,9 +31,11 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -75,51 +78,61 @@ class MultipleStacksActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val navigationState = rememberNavigationState(
-                startRoute = RouteA,
-                topLevelRoutes = TOP_LEVEL_ROUTES.keys
-            )
+            MultipleStacksContent()
+        }
+    }
+}
 
-            val navigator = remember { Navigator(navigationState) }
+/**
+ * Demonstrates managing independent back stacks for multiple top-level destinations.
+ */
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+@Preview
+fun MultipleStacksContent() {
+    val navigationState = rememberNavigationState(
+        startRoute = RouteA,
+        topLevelRoutes = TOP_LEVEL_ROUTES.keys
+    )
 
-            val entryProvider = entryProvider {
-                featureASection(
-                    reselectEvents = navigator.reselectEvents,
-                    onSubRouteClick = { navigator.navigate(RouteA1) }
-                )
-                featureBSection(onSubRouteClick = { navigator.navigate(RouteB1) })
-                featureCSection(onSubRouteClick = { navigator.navigate(RouteC1) })
-            }
+    val navigator = remember { Navigator(navigationState) }
 
-            Scaffold(contentWindowInsets = WindowInsets(0.dp), bottomBar = {
-                NavigationBar {
-                    TOP_LEVEL_ROUTES.forEach { (key, value) ->
-                        val isSelected = key == navigationState.topLevelRoute
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                navigator.navigate(key)
-                                if (isSelected) {
-                                    navigator.onReselect(key)
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = value.icon,
-                                    contentDescription = value.description
-                                )
-                            },
-                            label = { Text(value.description) }
+    val entryProvider = entryProvider {
+        featureASection(
+            reselectEvents = navigator.reselectEvents,
+            onSubRouteClick = { navigator.navigate(RouteA1) }
+        )
+        featureBSection(onSubRouteClick = { navigator.navigate(RouteB1) })
+        featureCSection(onSubRouteClick = { navigator.navigate(RouteC1) })
+    }
+
+    Scaffold(contentWindowInsets = WindowInsets(0.dp), bottomBar = {
+        NavigationBar {
+            TOP_LEVEL_ROUTES.forEach { (key, value) ->
+                val isSelected = key == navigationState.topLevelRoute
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        navigator.navigate(key)
+                        if (isSelected) {
+                            navigator.onReselect(key)
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = value.icon,
+                            contentDescription = value.description
                         )
-                    }
-                }
-            }) { innerPadding ->
-                NavDisplay(
-                    entries = navigationState.toDecoratedEntries(entryProvider),
-                    onBack = { navigator.goBack() },
-                    modifier = Modifier.padding(innerPadding)
+                    },
+                    label = { Text(value.description) }
                 )
             }
         }
+    }) { innerPadding ->
+        NavDisplay(
+            entries = navigationState.toDecoratedEntries(entryProvider),
+            onBack = { navigator.goBack() },
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -39,44 +40,53 @@ class DynamicFeatureActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(Home)
-            val dynamicFeatureManager = retainDynamicFeatureManager()
-
-            DynamicFeatureDownloadProgressDialog(dynamicFeatureManager)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                modifier = Modifier.fillMaxSize(),
-                entryProvider = entryProvider {
-                    appEntry<Home> {
-                        HomeScreen(
-                            onNavigateToInstallTime = {
-                                dynamicFeatureManager.installModule(
-                                    moduleName = InstallTimeModule.moduleName,
-                                    onModuleInstalled = {
-                                        backStack.add(InstallTimeModule.Home)
-                                    }
-                                )
-                            },
-                            onNavigateToOnDemand = {
-                                dynamicFeatureManager.installModule(
-                                    moduleName = OnDemandModule.moduleName,
-                                    onModuleInstalled = {
-                                        backStack.add(OnDemandModule.Home)
-                                    }
-                                )
-                            },
-                        )
-                    }
-
-                    dynamicFeatureManager.installedModules
-                        .mapNotNull { ALL_DYNAMIC_MODULES_MAP[it] }
-                        .forEach { buildDynamicEntries(it) }
-                }
-            )
+            DynamicFeatureContent()
         }
     }
+}
+
+/**
+ * Demonstrates navigating to install-time and on-demand dynamic feature modules in [NavDisplay].
+ */
+@Composable
+@Preview
+fun DynamicFeatureContent() {
+    val backStack = rememberNavBackStack(Home)
+    val dynamicFeatureManager = retainDynamicFeatureManager()
+
+    DynamicFeatureDownloadProgressDialog(dynamicFeatureManager)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        modifier = Modifier.fillMaxSize(),
+        entryProvider = entryProvider {
+            appEntry<Home> {
+                HomeScreen(
+                    onNavigateToInstallTime = {
+                        dynamicFeatureManager.installModule(
+                            moduleName = InstallTimeModule.moduleName,
+                            onModuleInstalled = {
+                                backStack.add(InstallTimeModule.Home)
+                            }
+                        )
+                    },
+                    onNavigateToOnDemand = {
+                        dynamicFeatureManager.installModule(
+                            moduleName = OnDemandModule.moduleName,
+                            onModuleInstalled = {
+                                backStack.add(OnDemandModule.Home)
+                            }
+                        )
+                    },
+                )
+            }
+
+            dynamicFeatureManager.installedModules
+                .mapNotNull { ALL_DYNAMIC_MODULES_MAP[it] }
+                .forEach { buildDynamicEntries(it) }
+        }
+    )
 }
 
 @Composable

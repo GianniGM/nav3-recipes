@@ -21,7 +21,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -42,39 +44,48 @@ class ResultSerializableActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            Scaffold { paddingValues ->
-                val backStack = rememberNavBackStack(Home)
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.padding(paddingValues),
-                    onBack = { backStack.removeLastOrNull() },
-                    entryDecorators = listOf(
-                        rememberSaveableStateHolderNavEntryDecorator(),
-                        rememberResultEventBusNavEntryDecorator()
-                    ),
-                    entryProvider = entryProvider {
-                        entry<Home> {
-                            val resultState = LocalResultEventBus
-                                .current
-                                .conflateAsSerializableState<Person?>(null)
-                            val person = resultState.value
-                            HomeScreen(
-                                person = person,
-                                onNext = { backStack.add(PersonDetailsForm()) }
-                            )
-                        }
-                        entry<PersonDetailsForm> {
-                            val resultBus = LocalResultEventBus.current
-                            PersonDetailsScreen(
-                                onSubmit = { person ->
-                                    resultBus.sendResult(result = person)
-                                    backStack.removeLastOrNull()
-                                }
-                            )
-                        }
-                    }
-                )
-            }
+            ResultSerializableContent()
         }
+    }
+}
+
+/**
+ * Demonstrates returning a serializable result state between destinations in [NavDisplay].
+ */
+@Composable
+@Preview
+fun ResultSerializableContent() {
+    Scaffold { paddingValues ->
+        val backStack = rememberNavBackStack(Home)
+        NavDisplay(
+            backStack = backStack,
+            modifier = Modifier.padding(paddingValues),
+            onBack = { backStack.removeLastOrNull() },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberResultEventBusNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                entry<Home> {
+                    val resultState = LocalResultEventBus
+                        .current
+                        .conflateAsSerializableState<Person?>(null)
+                    val person = resultState.value
+                    HomeScreen(
+                        person = person,
+                        onNext = { backStack.add(PersonDetailsForm()) }
+                    )
+                }
+                entry<PersonDetailsForm> {
+                    val resultBus = LocalResultEventBus.current
+                    PersonDetailsScreen(
+                        onSubmit = { person ->
+                            resultBus.sendResult(result = person)
+                            backStack.removeLastOrNull()
+                        }
+                    )
+                }
+            }
+        )
     }
 }

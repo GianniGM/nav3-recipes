@@ -13,9 +13,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.deeplink.DeepLinkRequest
@@ -31,9 +33,8 @@ import com.example.nav3recipes.deeplink.syntheticbackstack.util.SimpleDeepLinkMa
 import com.example.nav3recipes.deeplink.syntheticbackstack.util.navigateUp
 import com.example.nav3recipes.deeplink.syntheticbackstack.util.withBackStack
 
-class SyntheticBackStackAppActivity: ComponentActivity() {
+class SyntheticBackStackAppActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -42,74 +43,92 @@ class SyntheticBackStackAppActivity: ComponentActivity() {
 
         val flags = intent.flags
         val isNewTask = flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0 &&
-                flags and Intent.FLAG_ACTIVITY_CLEAR_TASK != 0
+            flags and Intent.FLAG_ACTIVITY_CLEAR_TASK != 0
 
         val matcher = SimpleDeepLinkMatcher().withBackStack(isNewTask)
         val backStack = matcher.match(request)?.backStack ?: listOf(Home)
 
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack().apply {
-                addAll(backStack)
-            }
-
-            Scaffold(
-                topBar = {
-                    // top app bar to display up button
-                    TopAppBar(
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        title = { stringResource(R.string.app_name)},
-                        navigationIcon = {
-                            /**
-                             * Up button should never exit your app. Do not display it
-                             * on the root Screen.
-                             */
-                            if (backStack.last() != Home) {
-                                IconButton(onClick = {
-                                    backStack.navigateUp(
-                                        this@SyntheticBackStackAppActivity,
-                                        this@SyntheticBackStackAppActivity
-                                    )
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.outline_arrow_upward_24),
-                                        contentDescription = "Up Button",
-                                    )
-                                }
-                            }
-                        },
+            SyntheticBackStackAppContent(
+                syntheticBackStack = backStack,
+                onNavigateUp = { navBackStack ->
+                    navBackStack.navigateUp(
+                        this@SyntheticBackStackAppActivity,
+                        this@SyntheticBackStackAppActivity
                     )
-                },
-            ) { innerPadding ->
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull()},
-                    modifier = Modifier.padding(innerPadding),
-                    entryProvider = entryProvider {
-                        entry<Home> { key ->
-                            EntryScreen(key.screenTitle) {
-                                PaddedButton("See Users") {
-                                    backStack.add(Users)
-                                }
-                            }
-                        }
-                        entry<Users> { key ->
-                            EntryScreen(key.screenTitle) {
-                                FriendsList(LIST_USERS) { user ->
-                                    backStack.add(UserDetail(user))
-                                }
-                            }
-                        }
-                        entry<UserDetail> { result ->
-                            EntryScreen(result.screenTitle) {
-                                FriendsList(listOf(result.user))
-                            }
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Displays the deep link target app with a synthetic back stack and Up navigation in [NavDisplay].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview(showBackground = true)
+fun SyntheticBackStackAppContent(
+    syntheticBackStack: List<NavKey> = listOf(Home),
+    onNavigateUp: (NavBackStack<NavKey>) -> Unit = {}
+) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack().apply {
+        addAll(syntheticBackStack)
+    }
+
+    Scaffold(
+        topBar = {
+            // top app bar to display up button
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = { stringResource(R.string.app_name) },
+                navigationIcon = {
+                    /**
+                     * Up button should never exit your app. Do not display it
+                     * on the root Screen.
+                     */
+                    if (backStack.last() != Home) {
+                        IconButton(onClick = {
+                            onNavigateUp(backStack)
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_arrow_upward_24),
+                                contentDescription = "Up Button",
+                            )
                         }
                     }
-                )
+                },
+            )
+        },
+    ) { innerPadding ->
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            modifier = Modifier.padding(innerPadding),
+            entryProvider = entryProvider {
+                entry<Home> { key ->
+                    EntryScreen(key.screenTitle) {
+                        PaddedButton("See Users") {
+                            backStack.add(Users)
+                        }
+                    }
+                }
+                entry<Users> { key ->
+                    EntryScreen(key.screenTitle) {
+                        FriendsList(LIST_USERS) { user ->
+                            backStack.add(UserDetail(user))
+                        }
+                    }
+                }
+                entry<UserDetail> { result ->
+                    EntryScreen(result.screenTitle) {
+                        FriendsList(listOf(result.user))
+                    }
+                }
             }
-        }
+        )
     }
 }

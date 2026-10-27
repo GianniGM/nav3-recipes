@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.example.nav3recipes.animations.AnimatedActivity
@@ -82,7 +84,7 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 /**
  * Activity to show all available recipes and allow users to launch each one.
  */
-private class Recipe(
+class Recipe(
     val name: String,
     val activityClass: Class<out Activity>
 )
@@ -155,64 +157,79 @@ class RecipePickerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setEdgeToEdgeConfig()
         setContent {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = {
-                    TopAppBar(
-                        title = { Text("Recipes") },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }) { innerPadding ->
-                RecipeList(padding = innerPadding)
-            }
-        }
-    }
-
-
-    @Composable
-    fun RecipeList(padding: PaddingValues) {
-        LazyVerticalGrid(
-            modifier = Modifier.fillMaxSize(),
-            columns = GridCells.Adaptive(minSize = 240.dp),
-            contentPadding = padding,
-        ) {
-            items(recipes, span = { item ->
-                val span = if (item is Heading) maxLineSpan else 1
-                GridItemSpan(span)
-            }) { item ->
-                when (item) {
-                    is Recipe -> {
-                        ListItem(
-                            headlineContent = { Text(item.name) },
-                            modifier = Modifier.clickable(onClick = dropUnlessResumed {
-                                item.start()
-                            })
-                        )
-                    }
-
-                    is Heading -> {
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = item.name,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        )
-                    }
-                }
-            }
+            RecipePickerContent(onRecipeClick = { it.start() })
         }
     }
 
     private fun Recipe.start() {
         val intent = Intent(this@RecipePickerActivity, this.activityClass)
         startActivity(intent)
+    }
+}
+
+/**
+ * Displays the top app bar and grid of available Navigation 3 recipes.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview
+fun RecipePickerContent(onRecipeClick: (Recipe) -> Unit = {}) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Recipes") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+    ) { innerPadding ->
+        RecipeList(padding = innerPadding, onRecipeClick = onRecipeClick)
+    }
+}
+
+/**
+ * Renders the adaptive grid of recipe headings and clickable recipe items.
+ */
+@Composable
+fun RecipeList(padding: PaddingValues, onRecipeClick: (Recipe) -> Unit) {
+    LazyVerticalGrid(
+        modifier = Modifier.fillMaxSize(),
+        columns = GridCells.Adaptive(minSize = 240.dp),
+        contentPadding = padding,
+    ) {
+        items(recipes, span = { item ->
+            val span = if (item is Heading) maxLineSpan else 1
+            GridItemSpan(span)
+        }) { item ->
+            when (item) {
+                is Recipe -> {
+                    ListItem(
+                        headlineContent = { Text(item.name) },
+                        modifier = Modifier.clickable(
+                            onClick = dropUnlessResumed {
+                                onRecipeClick(item)
+                            }
+                        )
+                    )
+                }
+
+                is Heading -> {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = item.name,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                }
+            }
+        }
     }
 }

@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
@@ -34,34 +36,46 @@ class CustomDeepLinkMatcherActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            EntryScreen {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    var text by remember { mutableStateOf("") }
-                    OutlinedTextField(
-                        placeholder = { Text("Your name...", color = Color.Black.copy(alpha = 0.5f)) },
-                        value = text,
-                        singleLine = true,
-                        onValueChange = { text = it },
+            CustomDeepLinkMatcherContent(
+                onSignUp = { name ->
+                    val intent = Intent(
+                        this@CustomDeepLinkMatcherActivity,
+                        MainActivity::class.java
                     )
-
-                    ElevatedButton(
-                        onClick =
-                            dropUnlessResumed {
-                                val intent = Intent(
-                                    this@CustomDeepLinkMatcherActivity,
-                                    MainActivity::class.java
-                                )
-                                val json = Json.encodeToString(HomeKey.serializer(), HomeKey(text))
-                                intent.putExtra(JsonDeepLinkMatcherKey.toString(), json)
-                                startActivity(intent)
-                        }
-                    ) {
-                        Text("Sign up")
-                    }
+                    val json = Json.encodeToString(HomeKey.serializer(), HomeKey(name))
+                    intent.putExtra(JsonDeepLinkMatcherKey.toString(), json)
+                    startActivity(intent)
                 }
+            )
+        }
+    }
+}
+
+/**
+ * Displays the form for testing a custom [JsonDeepLinkMatcher] intent extra deep link.
+ */
+@Composable
+@Preview(showBackground = true)
+fun CustomDeepLinkMatcherContent(onSignUp: (String) -> Unit = {}) {
+    EntryScreen {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            var text by remember { mutableStateOf("") }
+            OutlinedTextField(
+                placeholder = { Text("Your name...", color = Color.Black.copy(alpha = 0.5f)) },
+                value = text,
+                singleLine = true,
+                onValueChange = { text = it },
+            )
+
+            ElevatedButton(
+                onClick = dropUnlessResumed {
+                    onSignUp(text)
+                }
+            ) {
+                Text("Sign up")
             }
         }
     }

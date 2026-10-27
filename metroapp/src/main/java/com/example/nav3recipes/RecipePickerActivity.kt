@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.example.nav3recipes.modular.metro.MetroDeepLinkActivity
@@ -45,7 +46,7 @@ import com.example.nav3recipes.ui.setEdgeToEdgeConfig
 /**
  * Activity to show all available recipes and allow users to launch each one.
  */
-private class Recipe(
+class Recipe(
     val name: String,
     val activityClass: Class<out Activity>
 )
@@ -56,48 +57,60 @@ private val recipes = listOf(
 )
 
 class RecipePickerActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setEdgeToEdgeConfig()
         setContent {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = {
-                    TopAppBar(
-                        title = { Text("Metro Recipes") },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }) { innerPadding ->
-                RecipeList(padding = innerPadding)
-            }
-        }
-    }
-
-
-    @Composable
-    fun RecipeList(padding: PaddingValues) {
-        LazyVerticalGrid(
-            modifier = Modifier.fillMaxSize(),
-            columns = GridCells.Adaptive(minSize = 240.dp),
-            contentPadding = padding,
-        ) {
-            items(recipes) { item ->
-                ListItem(
-                    headlineContent = { Text(item.name) },
-                    modifier = Modifier.clickable(onClick = dropUnlessResumed {
-                        item.start()
-                    })
-                )
-            }
+            RecipePickerContent(onRecipeClick = { it.start() })
         }
     }
 
     private fun Recipe.start() {
         val intent = Intent(this@RecipePickerActivity, this.activityClass)
         startActivity(intent)
+    }
+}
+
+/**
+ * Displays the top app bar and grid of available Metro Navigation 3 recipes.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview
+fun RecipePickerContent(onRecipeClick: (Recipe) -> Unit = {}) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Metro Recipes") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+    ) { innerPadding ->
+        RecipeList(padding = innerPadding, onRecipeClick = onRecipeClick)
+    }
+}
+
+/**
+ * Renders the adaptive grid of Metro recipe items.
+ */
+@Composable
+fun RecipeList(padding: PaddingValues, onRecipeClick: (Recipe) -> Unit) {
+    LazyVerticalGrid(
+        modifier = Modifier.fillMaxSize(),
+        columns = GridCells.Adaptive(minSize = 240.dp),
+        contentPadding = padding,
+    ) {
+        items(recipes) { item ->
+            ListItem(
+                headlineContent = { Text(item.name) },
+                modifier = Modifier.clickable(onClick = dropUnlessResumed {
+                    onRecipeClick(item)
+                })
+            )
+        }
     }
 }

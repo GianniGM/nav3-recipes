@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.compose.AndroidFragment
@@ -29,39 +31,48 @@ private data class ViewRoute(val id: String) : NavKey
 
 class InteropActivity : FragmentActivity() {
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(FragmentRoute)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<FragmentRoute> {
-                        Column(Modifier.fillMaxSize().wrapContentSize()) {
-                            AndroidFragment<MyCustomFragment>()
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(ViewRoute("123"))
-                            }) {
-                                Text("Go to View")
-                            }
-                        }
-                    }
-                    entry<ViewRoute> { key ->
-                        AndroidView(
-                            modifier = Modifier.fillMaxSize().wrapContentSize(),
-                            factory = { context ->
-                                TextView(context).apply {
-                                    text = "My View with key: ${key.id}"
-                                }
-                            }
-                        )
-                    }
-                }
-            )
+            InteropContent()
         }
     }
+}
+
+/**
+ * Demonstrates interoperability with Android Fragments and Views inside [NavDisplay] entries.
+ */
+@SuppressLint("SetTextI18n")
+@Composable
+@Preview
+fun InteropContent() {
+    val backStack = rememberNavBackStack(FragmentRoute)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<FragmentRoute> {
+                Column(Modifier.fillMaxSize().wrapContentSize()) {
+                    AndroidFragment<MyCustomFragment>()
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(ViewRoute("123"))
+                    }) {
+                        Text("Go to View")
+                    }
+                }
+            }
+            entry<ViewRoute> { key ->
+                AndroidView(
+                    modifier = Modifier.fillMaxSize().wrapContentSize(),
+                    factory = { context ->
+                        TextView(context).apply {
+                            text = "My View with key: ${key.id}"
+                        }
+                    }
+                )
+            }
+        }
+    )
 }

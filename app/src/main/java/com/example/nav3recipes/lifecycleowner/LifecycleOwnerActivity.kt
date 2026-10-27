@@ -40,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -69,74 +70,83 @@ class LifecycleOwnerActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(RouteA)
-            val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
+            LifecycleOwnerContent()
+        }
+    }
+}
 
-            NavDisplay(
-                backStack = backStack,
-                onBack = backStack::removeLastOrNull,
-                sceneStrategies = listOf(dialogStrategy),
-                entryProvider = entryProvider {
-                    entry<RouteA> {
-                        LogLifecycleEffect("ScreenA")
-                        ContentGreen("Screen A") {
-                            var progressValue by remember { mutableFloatStateOf(0f) }
-                            val coroutineScope = rememberCoroutineScope()
+/**
+ * Demonstrates per-entry lifecycle transitions when opening a dialog over a destination in [NavDisplay].
+ */
+@Composable
+@Preview
+fun LifecycleOwnerContent() {
+    val backStack = rememberNavBackStack(RouteA)
+    val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
 
-                            val animatedProgress by animateFloatAsState(
-                                targetValue = progressValue,
-                                animationSpec = if (progressValue == 0f) snap() else tween(durationMillis = 100, easing = LinearEasing),
-                                label = "ProgressAnimation"
-                            )
+    NavDisplay(
+        backStack = backStack,
+        onBack = backStack::removeLastOrNull,
+        sceneStrategies = listOf(dialogStrategy),
+        entryProvider = entryProvider {
+            entry<RouteA> {
+                LogLifecycleEffect("ScreenA")
+                ContentGreen("Screen A") {
+                    var progressValue by remember { mutableFloatStateOf(0f) }
+                    val coroutineScope = rememberCoroutineScope()
 
-                            // LifecycleResumeEffect runs only while ScreenA is in the RESUMED state.
-                            // When the dialog opens, ScreenA transitions to PAUSED, which calls onPauseOrDispose.
-                            LifecycleResumeEffect(Unit) {
-                                val job = coroutineScope.launch {
-                                    while (true) {
-                                        delay(100.milliseconds)
-                                        progressValue += 0.01f
-                                        if (progressValue >= 1f) {
-                                            progressValue = 0f
-                                        }
-                                    }
-                                }
-                                onPauseOrDispose {
-                                    job.cancel()
-                                }
-                            }
+                    val animatedProgress by animateFloatAsState(
+                        targetValue = progressValue,
+                        animationSpec = if (progressValue == 0f) snap() else tween(durationMillis = 100, easing = LinearEasing),
+                        label = "ProgressAnimation"
+                    )
 
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                LinearProgressIndicator(progress = { animatedProgress })
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = dropUnlessResumed { backStack.add(RouteB) }) {
-                                    Text("Open Dialog")
+                    // LifecycleResumeEffect runs only while ScreenA is in the RESUMED state.
+                    // When the dialog opens, ScreenA transitions to PAUSED, which calls onPauseOrDispose.
+                    LifecycleResumeEffect(Unit) {
+                        val job = coroutineScope.launch {
+                            while (true) {
+                                delay(100.milliseconds)
+                                progressValue += 0.01f
+                                if (progressValue >= 1f) {
+                                    progressValue = 0f
                                 }
                             }
                         }
+                        onPauseOrDispose {
+                            job.cancel()
+                        }
                     }
-                    entry<RouteB>(metadata = DialogSceneStrategy.dialog()) {
-                        LogLifecycleEffect("Dialog")
-                        AlertDialog(
-                            onDismissRequest = backStack::removeLastOrNull,
-                            title = { Text("Dialog") },
-                            text = {
-                                Text("Screen A is no longer in resumed state, pausing the progress indicator.")
-                            },
-                            confirmButton = {
-                                Button(onClick = dropUnlessResumed { backStack.removeLastOrNull() }) {
-                                    Text("Dismiss Dialog")
-                                }
-                            }
-                        )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        LinearProgressIndicator(progress = { animatedProgress })
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = dropUnlessResumed { backStack.add(RouteB) }) {
+                            Text("Open Dialog")
+                        }
                     }
                 }
-            )
+            }
+            entry<RouteB>(metadata = DialogSceneStrategy.dialog()) {
+                LogLifecycleEffect("Dialog")
+                AlertDialog(
+                    onDismissRequest = backStack::removeLastOrNull,
+                    title = { Text("Dialog") },
+                    text = {
+                        Text("Screen A is no longer in resumed state, pausing the progress indicator.")
+                    },
+                    confirmButton = {
+                        Button(onClick = dropUnlessResumed { backStack.removeLastOrNull() }) {
+                            Text("Dismiss Dialog")
+                        }
+                    }
+                )
+            }
         }
-    }
+    )
 }
 
 @Composable

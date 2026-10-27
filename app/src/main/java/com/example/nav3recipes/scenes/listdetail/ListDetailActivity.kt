@@ -21,9 +21,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -57,51 +64,63 @@ data object Profile : NavKey
 
 class ListDetailActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         setContent {
+            ListDetailContent()
+        }
+    }
+}
 
-            Scaffold { paddingValues ->
+/**
+ * Demonstrates a custom two-pane list-detail scene layout with shared transitions in [NavDisplay].
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+@Preview
+fun ListDetailContent() {
+    Scaffold { paddingValues ->
 
-                val backStack = rememberNavBackStack(ConversationList)
-                val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
+        val backStack = rememberNavBackStack(ConversationList)
+        val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
 
-                SharedTransitionLayout {
-                    NavDisplay(
-                        backStack = backStack,
-                        onBack = { backStack.removeLastOrNull() },
-                        sceneStrategies = listOf(listDetailStrategy),
-                        sharedTransitionScope = this,
-                        modifier = Modifier.padding(paddingValues),
-                        entryProvider = entryProvider {
-                            entry<ConversationList>(
-                                metadata = ListDetailScene.listPane()
-                            ) {
-                                ConversationListScreen(
-                                    onConversationClicked = { detailRoute ->
-                                        backStack.addDetail(detailRoute)
-                                    }
-                                )
+        SharedTransitionLayout {
+            NavDisplay(
+                backStack = backStack,
+                onBack = { backStack.removeLastOrNull() },
+                sceneStrategies = listOf(listDetailStrategy),
+                sharedTransitionScope = this,
+                modifier = Modifier.padding(paddingValues),
+                predictivePopTransitionSpec = {
+                    fadeIn(tween(300)) togetherWith
+                        scaleOut(targetScale = 0.7f) + fadeOut(tween(300))
+                },
+                entryProvider = entryProvider {
+                    entry<ConversationList>(
+                        metadata = ListDetailScene.listPane()
+                    ) {
+                        ConversationListScreen(
+                            onConversationClicked = { detailRoute ->
+                                backStack.addDetail(detailRoute)
                             }
-                            entry<ConversationDetail>(
-                                metadata = ListDetailScene.detailPane()
-                            ) { conversationDetail ->
-                                ConversationDetailScreen(
-                                    conversationDetail = conversationDetail,
-                                    onBack = { backStack.removeLastOrNull() },
-                                    onProfileClicked = { backStack.add(Profile) }
-                                )
-                            }
-                            entry<Profile> {
-                                ProfileScreen()
-                            }
-                        }
-                    )
+                        )
+                    }
+                    entry<ConversationDetail>(
+                        metadata = ListDetailScene.detailPane()
+                    ) { conversationDetail ->
+                        ConversationDetailScreen(
+                            conversationDetail = conversationDetail,
+                            onBack = { backStack.removeLastOrNull() },
+                            onProfileClicked = { backStack.add(Profile) }
+                        )
+                    }
+                    entry<Profile> {
+                        ProfileScreen()
+                    }
                 }
-            }
+            )
         }
     }
 }

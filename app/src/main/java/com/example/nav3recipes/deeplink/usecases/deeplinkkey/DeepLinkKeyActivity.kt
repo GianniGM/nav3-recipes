@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -33,70 +35,7 @@ class DeepLinkKeyActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            EntryScreen("DeepLinkKey Sandbox") {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    var userIdText by remember { mutableStateOf("42") }
-                    var categoryText by remember { mutableStateOf("electronics") }
-                    var productIdText by remember { mutableStateOf("laptop-101") }
-
-                    TextContent("Test launching deep links defined by DeepLinkKey implementations:")
-
-                    // 1. Home Key Deep Link
-                    ElevatedButton(
-                        onClick = dropUnlessResumed {
-                            launchDeepLink(HomeKey.uriPattern)
-                        }
-                    ) {
-                        Text("Launch Home DeepLink\n(${HomeKey.uriPattern})")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // 2. User Key Deep Link
-                    OutlinedTextField(
-                        value = userIdText,
-                        onValueChange = { userIdText = it },
-                        label = { Text("User ID") },
-                        singleLine = true,
-                    )
-                    ElevatedButton(
-                        onClick = dropUnlessResumed {
-                            val id = userIdText.toIntOrNull() ?: 1
-                            val uri = "https://www.nav3recipes.com/user/$id"
-                            launchDeepLink(uri)
-                        }
-                    ) {
-                        Text("Launch User DeepLink")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // 3. Product Key Deep Link
-                    OutlinedTextField(
-                        value = categoryText,
-                        onValueChange = { categoryText = it },
-                        label = { Text("Category") },
-                        singleLine = true,
-                    )
-                    OutlinedTextField(
-                        value = productIdText,
-                        onValueChange = { productIdText = it },
-                        label = { Text("Product ID") },
-                        singleLine = true,
-                    )
-                    ElevatedButton(
-                        onClick = dropUnlessResumed {
-                            val uri = "https://www.nav3recipes.com/products/$categoryText/$productIdText"
-                            launchDeepLink(uri)
-                        }
-                    ) {
-                        Text("Launch Product DeepLink")
-                    }
-                }
-            }
+            DeepLinkKeyContent(onLaunchDeepLink = ::launchDeepLink)
         }
     }
 
@@ -105,5 +44,77 @@ class DeepLinkKeyActivity : ComponentActivity() {
             data = uriString.toUri()
         }
         startActivity(intent)
+    }
+}
+
+/**
+ * Displays the sandbox UI for testing [DeepLinkKey] routes.
+ */
+@Composable
+@Preview(showBackground = true)
+fun DeepLinkKeyContent(onLaunchDeepLink: (String) -> Unit = {}) {
+    EntryScreen("DeepLinkKey Sandbox") {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            var userIdText by remember { mutableStateOf("42") }
+            var categoryText by remember { mutableStateOf("electronics") }
+            var productIdText by remember { mutableStateOf("laptop-101") }
+
+            TextContent("Test launching deep links defined by DeepLinkKey implementations:")
+
+            // Home Key Deep Link
+            ElevatedButton(
+                onClick = dropUnlessResumed {
+                    onLaunchDeepLink(HomeKey.uriPattern)
+                }
+            ) {
+                Text("Launch Home DeepLink\n(${HomeKey.uriPattern})")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // User Key Deep Link
+            OutlinedTextField(
+                value = userIdText,
+                onValueChange = { userIdText = it },
+                label = { Text("User ID") },
+                singleLine = true,
+            )
+            ElevatedButton(
+                onClick = dropUnlessResumed {
+                    val id = userIdText.toIntOrNull() ?: 1
+                    val uri = "https://www.nav3recipes.com/user/$id"
+                    onLaunchDeepLink(uri)
+                }
+            ) {
+                Text("Launch User DeepLink")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Product Key Deep Link
+            OutlinedTextField(
+                value = categoryText,
+                onValueChange = { categoryText = it },
+                label = { Text("Category") },
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = productIdText,
+                onValueChange = { productIdText = it },
+                label = { Text("Product ID") },
+                singleLine = true,
+            )
+            ElevatedButton(
+                onClick = dropUnlessResumed {
+                    val uri = "https://www.nav3recipes.com/products/$categoryText/$productIdText"
+                    onLaunchDeepLink(uri)
+                }
+            ) {
+                Text("Launch Product DeepLink")
+            }
+        }
     }
 }

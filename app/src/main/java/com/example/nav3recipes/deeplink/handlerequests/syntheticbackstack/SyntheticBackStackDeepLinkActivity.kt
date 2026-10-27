@@ -4,10 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.example.nav3recipes.common.deeplink.EntryScreen
@@ -36,72 +38,86 @@ internal const val ADVANCED_PATH_BASE = "https://www.nav3deeplink.com"
  *
  * See the [README](README.md) file of current module for more info on advanced deep linking.
  */
-class SyntheticBackStackDeepLinkActivity: ComponentActivity() {
+class SyntheticBackStackDeepLinkActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         setContent {
-            EntryScreen("Sandbox - Build Your Deeplink Intent") {
-                val initFirstName = MENU_OPTIONS_FIRST_NAME.values.first().first()
-                val initLocation = MENU_OPTIONS_LOCATION.values.last().first()
-                val initTaskStack = MENU_OPTIONS_TASK_STACK.values.first().first()
-                var firstName by remember { mutableStateOf(initFirstName) }
-                var location by remember { mutableStateOf(initLocation) }
-                var taskStack by remember { mutableStateOf(initTaskStack) }
-
-                // select first name
-                MenuDropDown(
-                    menuOptions = MENU_OPTIONS_FIRST_NAME,
-                ) { _, selected ->
-                    firstName = selected
-                }
-
-                // select first name
-                MenuDropDown(
-                    menuOptions = MENU_OPTIONS_LOCATION,
-                ) { _, selected ->
-                    location = selected
-                }
-
-                // select current task stack or build new task stack
-                MenuDropDown(
-                    menuOptions = MENU_OPTIONS_TASK_STACK,
-                ) { _, selected ->
-                    taskStack = selected
-                }
-
-                // build final deeplink URL and Intent
-                val finalUrl = "${ADVANCED_PATH_BASE}/user/$firstName/$location"
-
-                // display Intent info
-                val flagString = if (taskStack == TAG_NEW_TASK) {
-                    "Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK"
-                } else "<none>"
-                val intentString = """
-                    | Final Intent:
-                    | data = "$finalUrl"
-                    | action = Intent.ACTION_VIEW
-                    | flags = $flagString
-                """.trimMargin()
-
-                TextContent(intentString)
-
-                // deeplink to target
-                PaddedButton("Deeplink Away!", onClick = dropUnlessResumed {
+            SyntheticBackStackDeepLinkContent(
+                onLaunchDeepLink = { finalUrl, isNewTask ->
                     val intent = Intent().apply {
                         data = finalUrl.toUri()
                         action = Intent.ACTION_VIEW
-                        if (taskStack == TAG_NEW_TASK) {
+                        if (isNewTask) {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         }
                     }
-
                     startActivity(intent)
-                })
-            }
+                }
+            )
         }
+    }
+}
+
+/**
+ * Displays the sandbox UI for building and launching a synthetic back stack deep link intent.
+ */
+@Composable
+@Preview(showBackground = true)
+fun SyntheticBackStackDeepLinkContent(
+    onLaunchDeepLink: (finalUrl: String, isNewTask: Boolean) -> Unit = { _, _ -> }
+) {
+    EntryScreen("Sandbox - Build Your Deeplink Intent") {
+        val initFirstName = MENU_OPTIONS_FIRST_NAME.values.first().first()
+        val initLocation = MENU_OPTIONS_LOCATION.values.last().first()
+        val initTaskStack = MENU_OPTIONS_TASK_STACK.values.first().first()
+        var firstName by remember { mutableStateOf(initFirstName) }
+        var location by remember { mutableStateOf(initLocation) }
+        var taskStack by remember { mutableStateOf(initTaskStack) }
+
+        // select first name
+        MenuDropDown(
+            menuOptions = MENU_OPTIONS_FIRST_NAME,
+        ) { _, selected ->
+            firstName = selected
+        }
+
+        // select location
+        MenuDropDown(
+            menuOptions = MENU_OPTIONS_LOCATION,
+        ) { _, selected ->
+            location = selected
+        }
+
+        // select current task stack or build new task stack
+        MenuDropDown(
+            menuOptions = MENU_OPTIONS_TASK_STACK,
+        ) { _, selected ->
+            taskStack = selected
+        }
+
+        // build final deeplink URL and Intent
+        val finalUrl = "${ADVANCED_PATH_BASE}/user/$firstName/$location"
+
+        // display Intent info
+        val flagString = if (taskStack == TAG_NEW_TASK) {
+            "Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK"
+        } else "<none>"
+        val intentString = """
+            | Final Intent:
+            | data = "$finalUrl"
+            | action = Intent.ACTION_VIEW
+            | flags = $flagString
+        """.trimMargin()
+
+        TextContent(intentString)
+
+        // deeplink to target
+        PaddedButton("Deeplink Away!", onClick = dropUnlessResumed {
+            onLaunchDeepLink(finalUrl, taskStack == TAG_NEW_TASK)
+        })
     }
 }
 

@@ -29,6 +29,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -53,35 +54,46 @@ class CompositeFilterDeepLinkActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            EntryScreen {
-                val backStack = rememberNavBackStack(FilterHomeKey)
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
-                    entryProvider = entryProvider {
-                        entry<FilterHomeKey> {
-                            CompositeFilterScreen(
-                                onLaunch = { action, mimeType ->
-                                    val uri = DEMO_URI.toUri()
-                                    val intent = Intent(
-                                        this@CompositeFilterDeepLinkActivity,
-                                        MainActivity::class.java
-                                    ).apply {
-                                        this.action = action
-                                        if (mimeType != null) {
-                                            setDataAndType(uri, mimeType)
-                                        } else {
-                                            data = uri
-                                        }
-                                    }
-                                    startActivity(intent)
-                                }
-                            )
+            CompositeFilterDeepLinkContent(
+                onLaunch = { action, mimeType ->
+                    val uri = DEMO_URI.toUri()
+                    val intent = Intent(
+                        this@CompositeFilterDeepLinkActivity,
+                        MainActivity::class.java
+                    ).apply {
+                        this.action = action
+                        if (mimeType != null) {
+                            setDataAndType(uri, mimeType)
+                        } else {
+                            data = uri
                         }
                     }
-                )
-            }
+                    startActivity(intent)
+                }
+            )
         }
+    }
+}
+
+/**
+ * Displays the composite deep link filter sandbox wrapped inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun CompositeFilterDeepLinkContent(
+    onLaunch: (action: String, mimeType: String?) -> Unit = { _, _ -> }
+) {
+    EntryScreen {
+        val backStack = rememberNavBackStack(FilterHomeKey)
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+                entry<FilterHomeKey> {
+                    CompositeFilterScreen(onLaunch = onLaunch)
+                }
+            }
+        )
     }
 }
 

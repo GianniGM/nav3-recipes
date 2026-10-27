@@ -21,6 +21,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -43,26 +45,35 @@ class BasicDslActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberNavBackStack(RouteA)
-
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<RouteA> {
-                        ContentGreen("Welcome to Nav3") {
-                            Button(onClick = dropUnlessResumed {
-                                backStack.add(RouteB("123"))
-                            }) {
-                                Text("Click to navigate")
-                            }
-                        }
-                    }
-                    entry<RouteB> { key ->
-                        ContentBlue("Route id: ${key.id} ")
-                    }
-                }
-            )
+            BasicDslContent()
         }
     }
+}
+
+/**
+ * Demonstrates basic navigation using [NavDisplay] and the [entryProvider] DSL.
+ */
+@Composable
+@Preview
+fun BasicDslContent() {
+    val backStack = rememberNavBackStack(RouteA)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<RouteA> {
+                ContentGreen("Welcome to Nav3") {
+                    Button(onClick = dropUnlessResumed {
+                        backStack.add(RouteB("123"))
+                    }) {
+                        Text("Click to navigate")
+                    }
+                }
+            }
+            entry<RouteB> { key ->
+                ContentBlue("Route id: ${key.id} ")
+            }
+        }
+    )
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -57,82 +58,91 @@ class ConditionalTransitionsActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
 
         setContent {
-            Scaffold { paddingValues ->
-                val backStack = rememberNavBackStack(Step1)
-
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.padding(paddingValues),
-                    onBack = backStack::removeLastOrNull,
-                    entryProvider = entryProvider {
-                        entry<Step1> {
-                            ContentGreen(title = "Screen 1") {
-                                StepContent(
-                                    step = it,
-                                    onNext = { backStack += Step2 },
-                                    onBack = ::finish, // closing the activity
-                                )
-                            }
-
-                        }
-                        entry<Step2> {
-                            ContentRed(title = "Screen 2") {
-                                StepContent(
-                                    step = it,
-                                    onNext = { backStack += Step3 },
-                                    onBack = backStack::removeLastOrNull,
-                                )
-                            }
-                        }
-                        entry<Step3> {
-                            ContentOrange(title = "Screen 3") {
-                                StepContent(
-                                    step = it,
-                                    onNext = { backStack += Step4 },
-                                    onBack = backStack::removeLastOrNull,
-                                )
-                            }
-                        }
-                        entry<Step4> {
-                            ContentPurple(title = "Screen 4") {
-                                StepContent(
-                                    step = it,
-                                    onNext = {
-                                        backStack.clear()
-                                        backStack.add(Step1)
-                                    },
-                                    onBack = backStack::removeLastOrNull,
-                                )
-                            }
-                        }
-                    },
-                    transitionSpec = {
-                        val initialKey = initialState.entries.lastOrNull()?.contentKey
-                        val targetKey = targetState.entries.lastOrNull()?.contentKey
-
-                        when (initialKey to targetKey) {
-                            Step1.toContentKey() to Step2.toContentKey() -> swipeLeft()
-                            Step2.toContentKey() to Step3.toContentKey() -> swipeUp()
-                            Step3.toContentKey() to Step4.toContentKey() -> swipeRight()
-                            Step4.toContentKey() to Step1.toContentKey() -> swipeDown()
-                            else -> swipeRight()
-                        }
-                    },
-                    popTransitionSpec = {
-                        val initialKey = initialState.entries.lastOrNull()?.contentKey
-                        val targetKey = targetState.entries.lastOrNull()?.contentKey
-
-                        when (initialKey to targetKey) {
-                            Step4.toContentKey() to Step1.toContentKey() -> swipeDown() // via backstack clearing
-                            Step2.toContentKey() to Step1.toContentKey() -> swipeRight()
-                            Step3.toContentKey() to Step2.toContentKey() -> swipeDown()
-                            Step4.toContentKey() to Step3.toContentKey() -> swipeLeft()
-                            else -> swipeLeft()
-                        }
-                    },
-                )
-            }
+            ConditionalTransitionsContent(onFinish = ::finish)
         }
+    }
+}
+
+/**
+ * Demonstrates choosing transition animations dynamically based on initial and target keys in [NavDisplay].
+ */
+@Composable
+@Preview
+fun ConditionalTransitionsContent(onFinish: () -> Unit = {}) {
+    Scaffold { paddingValues ->
+        val backStack = rememberNavBackStack(Step1)
+
+        NavDisplay(
+            backStack = backStack,
+            modifier = Modifier.padding(paddingValues),
+            onBack = backStack::removeLastOrNull,
+            entryProvider = entryProvider {
+                entry<Step1> {
+                    ContentGreen(title = "Screen 1") {
+                        StepContent(
+                            step = it,
+                            onNext = { backStack += Step2 },
+                            onBack = onFinish, // closing the activity
+                        )
+                    }
+
+                }
+                entry<Step2> {
+                    ContentRed(title = "Screen 2") {
+                        StepContent(
+                            step = it,
+                            onNext = { backStack += Step3 },
+                            onBack = backStack::removeLastOrNull,
+                        )
+                    }
+                }
+                entry<Step3> {
+                    ContentOrange(title = "Screen 3") {
+                        StepContent(
+                            step = it,
+                            onNext = { backStack += Step4 },
+                            onBack = backStack::removeLastOrNull,
+                        )
+                    }
+                }
+                entry<Step4> {
+                    ContentPurple(title = "Screen 4") {
+                        StepContent(
+                            step = it,
+                            onNext = {
+                                backStack.clear()
+                                backStack.add(Step1)
+                            },
+                            onBack = backStack::removeLastOrNull,
+                        )
+                    }
+                }
+            },
+            transitionSpec = {
+                val initialKey = initialState.entries.lastOrNull()?.contentKey
+                val targetKey = targetState.entries.lastOrNull()?.contentKey
+
+                when (initialKey to targetKey) {
+                    Step1.toContentKey() to Step2.toContentKey() -> swipeLeft()
+                    Step2.toContentKey() to Step3.toContentKey() -> swipeUp()
+                    Step3.toContentKey() to Step4.toContentKey() -> swipeRight()
+                    Step4.toContentKey() to Step1.toContentKey() -> swipeDown()
+                    else -> swipeRight()
+                }
+            },
+            popTransitionSpec = {
+                val initialKey = initialState.entries.lastOrNull()?.contentKey
+                val targetKey = targetState.entries.lastOrNull()?.contentKey
+
+                when (initialKey to targetKey) {
+                    Step4.toContentKey() to Step1.toContentKey() -> swipeDown() // via backstack clearing
+                    Step2.toContentKey() to Step1.toContentKey() -> swipeRight()
+                    Step3.toContentKey() to Step2.toContentKey() -> swipeDown()
+                    Step4.toContentKey() to Step3.toContentKey() -> swipeLeft()
+                    else -> swipeLeft()
+                }
+            },
+        )
     }
 }
 

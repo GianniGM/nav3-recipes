@@ -3,6 +3,8 @@ package com.example.nav3recipes.deeplink.usecases.matcher
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.deeplink.DeepLinkRequest
@@ -35,28 +37,37 @@ class MainActivity : ComponentActivity() {
         val key = matchResult?.key ?: FallbackKey
 
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
-            NavDisplay(
-                backStack = backStack,
-                onBack = backStack::removeLastOrNull,
-                entryProvider = entryProvider {
-                    entry<HomeKey> { key ->
-                        EntryScreen("Welcome") {
-                            TextContent(key.name)
-                        }
-                    }
-                    entry<FallbackKey> { key ->
-                        EntryScreen("Fallback Key") {
-                            TextContent(
-                                "Failed to deep link - DeepLinkRequest " +
-                                        "did not match with any DeepLinkMatcher"
-                            )
-                        }
-                    }
-                }
-            )
+            MainContent(key = key)
         }
     }
+}
+
+/**
+ * Displays the destination resolved by a custom [JsonDeepLinkMatcher] inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun MainContent(key: NavKey = HomeKey("User")) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
+    NavDisplay(
+        backStack = backStack,
+        onBack = backStack::removeLastOrNull,
+        entryProvider = entryProvider {
+            entry<HomeKey> { key ->
+                EntryScreen("Welcome") {
+                    TextContent(key.name)
+                }
+            }
+            entry<FallbackKey> { key ->
+                EntryScreen("Fallback Key") {
+                    TextContent(
+                        "Failed to deep link - DeepLinkRequest " +
+                            "did not match with any DeepLinkMatcher"
+                    )
+                }
+            }
+        }
+    )
 }
 
 // Optional JsonDeepLinkMatcher factory function that automatically captures KSerializer for T.
