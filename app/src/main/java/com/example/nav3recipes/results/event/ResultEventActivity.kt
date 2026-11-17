@@ -21,7 +21,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -45,43 +47,52 @@ class ResultEventActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            Scaffold { paddingValues ->
-
-                val backStack = rememberNavBackStack(Home)
-
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.padding(paddingValues),
-                    onBack = { backStack.removeLastOrNull() },
-                    entryDecorators = listOf(
-                        rememberSaveableStateHolderNavEntryDecorator(),
-                        rememberResultEventBusNavEntryDecorator()
-                    ),
-                    entryProvider = entryProvider {
-                        entry<Home> {
-                            val viewModel = viewModel<HomeViewModel>(key = Home.toString())
-                            ResultEffect<Person> { person ->
-                                viewModel.person = person
-                            }
-
-                            val person = viewModel.person
-                            HomeScreen(
-                                person = person,
-                                onNext = { backStack.add(PersonDetailsForm()) }
-                            )
-                        }
-                        entry<PersonDetailsForm> {
-                            val resultBus = LocalResultEventBus.current
-                            PersonDetailsScreen(
-                                onSubmit = { person ->
-                                    resultBus.sendResult<Person>(result = person)
-                                    backStack.removeLastOrNull()
-                                }
-                            )
-                        }
-                    }
-                )
-            }
+            ResultEventContent()
         }
+    }
+}
+
+/**
+ * Demonstrates returning a one-shot result event between destinations in [NavDisplay].
+ */
+@Composable
+@Preview
+fun ResultEventContent() {
+    Scaffold { paddingValues ->
+
+        val backStack = rememberNavBackStack(Home)
+
+        NavDisplay(
+            backStack = backStack,
+            modifier = Modifier.padding(paddingValues),
+            onBack = { backStack.removeLastOrNull() },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberResultEventBusNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                entry<Home> {
+                    val viewModel = viewModel<HomeViewModel>(key = Home.toString())
+                    ResultEffect<Person> { person ->
+                        viewModel.person = person
+                    }
+
+                    val person = viewModel.person
+                    HomeScreen(
+                        person = person,
+                        onNext = { backStack.add(PersonDetailsForm()) }
+                    )
+                }
+                entry<PersonDetailsForm> {
+                    val resultBus = LocalResultEventBus.current
+                    PersonDetailsScreen(
+                        onSubmit = { person ->
+                            resultBus.sendResult<Person>(result = person)
+                            backStack.removeLastOrNull()
+                        }
+                    )
+                }
+            }
+        )
     }
 }

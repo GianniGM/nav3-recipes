@@ -16,6 +16,7 @@
 
 package com.example.nav3recipes.dynamicfeature
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,7 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.dynamicfeatures.rememberDynamicFeatureNavEntryDecorator
 import androidx.navigation3.dynamicfeatures.rememberSplitInstallManager
@@ -68,83 +71,94 @@ class DynamicFeatureActivity : ComponentActivity() {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val splitInstallManager = rememberSplitInstallManager()
-            val dynamicFeatureDecorator = rememberDynamicFeatureNavEntryDecorator<NavKey>(
-                splitInstallManager = splitInstallManager,
-                defaultLoadingContent = { LoadingIndicator() }
+            DynamicFeatureContent(navigator = navigator)
+        }
+    }
+}
+
+/**
+ * Demonstrates navigating to install-time and on-demand dynamic feature modules in [NavDisplay].
+ */
+@Composable
+@Preview
+fun DynamicFeatureContent(
+    navigator: DynamicFeatureNavigator = remember { DynamicFeatureNavigator() }
+) {
+    val splitInstallManager = rememberSplitInstallManager()
+    val dynamicFeatureDecorator = rememberDynamicFeatureNavEntryDecorator<NavKey>(
+        splitInstallManager = splitInstallManager,
+        defaultLoadingContent = { LoadingIndicator() }
+    )
+
+    NavDisplay(
+        backStack = navigator.backStack,
+        onBack = { navigator.goBack() },
+        modifier = Modifier.fillMaxSize(),
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            dynamicFeatureDecorator,
+        ),
+        entryProvider = dynamicFeatureDecorator.entryProvider {
+            entry<Home> {
+                HomeScreen(
+                    onNavigateToInstallTime = {
+                        navigator.goTo(InstallTimeHome)
+                    },
+                    onNavigateToOnDemand = {
+                        navigator.goTo(OnDemandHome)
+                    },
+                )
+            }
+
+            dynamicFeatureModule(
+                initialKey = InstallTimeHome,
+                moduleName = "installtime",
+                entryProviderClassName = "com.example.dynamicfeature.installtime.InstallTimeModuleEntryProvider"
             )
 
-            NavDisplay(
-                backStack = navigator.backStack,
-                onBack = { navigator.goBack() },
-                modifier = Modifier.fillMaxSize(),
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    dynamicFeatureDecorator,
-                ),
-                entryProvider = dynamicFeatureDecorator.entryProvider {
-                    entry<Home> {
-                        HomeScreen(
-                            onNavigateToInstallTime = {
-                                navigator.goTo(InstallTimeHome)
-                            },
-                            onNavigateToOnDemand = {
-                                navigator.goTo(OnDemandHome)
-                            },
-                        )
+            dynamicFeatureModule(
+                initialKey = OnDemandHome,
+                moduleName = "ondemand",
+                entryProviderClassName = "com.example.dynamicfeature.ondemand.OnDemandModuleEntryProvider",
+                loadingContent = { state ->
+                    val confirmationLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.StartIntentSenderForResult()
+                    ) { result ->
+                        if (result.resultCode == Activity.RESULT_CANCELED) {
+                            navigator.backStack.remove(OnDemandHome)
+                        }
                     }
-
-                    dynamicFeatureModule(
-                        initialKey = InstallTimeHome,
-                        moduleName = "installtime",
-                        entryProviderClassName = "com.example.dynamicfeature.installtime.InstallTimeModuleEntryProvider"
-                    )
-
-                    dynamicFeatureModule(
-                        initialKey = OnDemandHome,
-                        moduleName = "ondemand",
-                        entryProviderClassName = "com.example.dynamicfeature.ondemand.OnDemandModuleEntryProvider",
-                        loadingContent = { state ->
-                            val confirmationLauncher = rememberLauncherForActivityResult(
-                                contract = ActivityResultContracts.StartIntentSenderForResult()
-                            ) { result ->
-                                if (result.resultCode == RESULT_CANCELED) {
-                                    navigator.backStack.remove(OnDemandHome)
-                                }
-                            }
-                            when (state.status()) {
-                                SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION -> {
-                                    LaunchedEffect(state.sessionId()) {
-                                        splitInstallManager.startConfirmationDialogForResult(
-                                            state,
-                                            confirmationLauncher,
-                                        )
-                                    }
-                                }
-                                SplitInstallSessionStatus.CANCELED -> {
-                                    LaunchedEffect(Unit) {
-                                        navigator.backStack.remove(OnDemandHome)
-                                    }
-                                }
-                                SplitInstallSessionStatus.FAILED -> {
-                                    InstallationFailedDialog(
-                                        errorCode = state.errorCode(),
-                                        onDismiss = { navigator.backStack.remove(OnDemandHome) },
-                                    )
-                                }
-                                else -> {
-                                    InstallingModuleDialog(
-                                        state = state,
-                                        onCancel = { navigator.backStack.remove(OnDemandHome) },
-                                    )
-                                }
+                    when (state.status()) {
+                        SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION -> {
+                            LaunchedEffect(state.sessionId()) {
+                                splitInstallManager.startConfirmationDialogForResult(
+                                    state,
+                                    confirmationLauncher,
+                                )
                             }
                         }
-                    )
+                        SplitInstallSessionStatus.CANCELED -> {
+                            LaunchedEffect(Unit) {
+                                navigator.backStack.remove(OnDemandHome)
+                            }
+                        }
+                        SplitInstallSessionStatus.FAILED -> {
+                            InstallationFailedDialog(
+                                errorCode = state.errorCode(),
+                                onDismiss = { navigator.backStack.remove(OnDemandHome) },
+                            )
+                        }
+                        else -> {
+                            InstallingModuleDialog(
+                                state = state,
+                                onCancel = { navigator.backStack.remove(OnDemandHome) },
+                            )
+                        }
+                    }
                 }
             )
         }
-    }
+    )
 }
 
 @Composable

@@ -3,6 +3,8 @@ package com.example.nav3recipes.deeplink.handlerequests.staticuri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -43,29 +45,38 @@ class MainActivity : ComponentActivity() {
          * Then pass starting key to backstack
          */
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<HomeKey> { key ->
-                        EntryScreen(key.name) {
-                            TextContent("Deep linked to Home")
-                        }
-                    }
-                    entry<FallbackKey> { key ->
-                        EntryScreen("${key.name} ") {
-                            TextContent(
-                                "Failed to deep link - DeepLinkRequest " +
-                                    "did not match with any DeepLinkMatcher"
-                            )
-                        }
-                    }
-
-                }
-            )
+            MainContent(key = key)
         }
     }
+}
+
+/**
+ * Displays the matched static URI deep link destination or fallback screen inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun MainContent(key: NavKey = HomeKey) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<HomeKey> { key ->
+                EntryScreen(key.name) {
+                    TextContent("Deep linked to Home")
+                }
+            }
+            entry<FallbackKey> { key ->
+                EntryScreen("${key.name} ") {
+                    TextContent(
+                        "Failed to deep link - DeepLinkRequest " +
+                            "did not match with any DeepLinkMatcher"
+                    )
+                }
+            }
+
+        }
+    )
 }
 
 /**

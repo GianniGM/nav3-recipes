@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavBackStack
@@ -60,34 +62,43 @@ class MainActivity : ComponentActivity() {
         val key = matchResult?.key ?: FallbackKey
 
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
-            NavDisplay(
-                backStack = backStack,
-                onBack = backStack::removeLastOrNull,
-                entryProvider = entryProvider {
-                    entry<ProductDetailsKey> { key ->
-                        EntryScreen(key.product.name) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .background(key.product.color, shape = CircleShape),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(key.quantity.toString(), color = Color.White)
-                            }
-                        }
-                    }
-                    entry<FallbackKey> {
-                        EntryScreen("Fallback Key") {
-                            TextContent(
-                                "Failed to deep link - DeepLinkRequest " +
-                                        "did not match with any DeepLinkMatcher"
-                            )
-                        }
-                    }
-                }
-            )
+            MainContent(key = key)
         }
     }
+}
+
+/**
+ * Displays the deep-linked product details destination decoded via [ProductSerializer] in [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun MainContent(key: NavKey = ProductDetailsKey(Product("Sample", Color.Red), 1)) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
+    NavDisplay(
+        backStack = backStack,
+        onBack = backStack::removeLastOrNull,
+        entryProvider = entryProvider {
+            entry<ProductDetailsKey> { key ->
+                EntryScreen(key.product.name) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(key.product.color, shape = CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(key.quantity.toString(), color = Color.White)
+                    }
+                }
+            }
+            entry<FallbackKey> {
+                EntryScreen("Fallback Key") {
+                    TextContent(
+                        "Failed to deep link - DeepLinkRequest " +
+                            "did not match with any DeepLinkMatcher"
+                    )
+                }
+            }
+        }
+    )
 }

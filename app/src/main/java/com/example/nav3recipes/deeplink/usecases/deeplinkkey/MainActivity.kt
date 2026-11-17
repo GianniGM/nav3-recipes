@@ -3,6 +3,8 @@ package com.example.nav3recipes.deeplink.usecases.deeplinkkey
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -36,33 +38,42 @@ class MainActivity : ComponentActivity() {
         val key = bestMatch?.key ?: FallbackKey
 
         setContent {
-            val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                entryProvider = entryProvider {
-                    entry<HomeKey> {
-                        EntryScreen("Home Screen") {
-                            TextContent("Welcome Home!\n(Matched: ${HomeKey.uriPattern})")
-                        }
-                    }
-                    entry<UserKey> { key ->
-                        EntryScreen("User Profile") {
-                            TextContent("User ID: ${key.id}\n(Matched: ${UserKey.uriPattern})")
-                        }
-                    }
-                    entry<ProductKey> { key ->
-                        EntryScreen("Product Details") {
-                            TextContent("Category: ${key.category}\nProduct ID: ${key.productId}\n(Matched: ${ProductKey.uriPattern})")
-                        }
-                    }
-                    entry<FallbackKey> {
-                        EntryScreen("Fallback Destination") {
-                            TextContent("No deep link pattern matched the incoming request.")
-                        }
-                    }
-                }
-            )
+            MainContent(key = key)
         }
     }
+}
+
+/**
+ * Displays the matched [DeepLinkKey] destination inside [NavDisplay].
+ */
+@Composable
+@Preview(showBackground = true)
+fun MainContent(key: NavKey = HomeKey) {
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(key)
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<HomeKey> {
+                EntryScreen("Home Screen") {
+                    TextContent("Welcome Home!\n(Matched: ${HomeKey.uriPattern})")
+                }
+            }
+            entry<UserKey> { key ->
+                EntryScreen("User Profile") {
+                    TextContent("User ID: ${key.id}\n(Matched: ${UserKey.uriPattern})")
+                }
+            }
+            entry<ProductKey> { key ->
+                EntryScreen("Product Details") {
+                    TextContent("Category: ${key.category}\nProduct ID: ${key.productId}\n(Matched: ${ProductKey.uriPattern})")
+                }
+            }
+            entry<FallbackKey> {
+                EntryScreen("Fallback Destination") {
+                    TextContent("No deep link pattern matched the incoming request.")
+                }
+            }
+        }
+    )
 }

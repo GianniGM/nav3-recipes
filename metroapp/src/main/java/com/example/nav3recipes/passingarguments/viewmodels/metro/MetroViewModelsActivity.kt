@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -50,47 +51,62 @@ class MetroViewModelsActivity(private val metroVmf: MetroViewModelFactory) : Com
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
         setContent {
-            val backStack = rememberSaveable { mutableStateListOf<Any>(RouteA) }
+            MetroViewModelsContent(metroVmf = metroVmf)
+        }
+    }
+}
 
+/**
+ * Demonstrates passing navigation arguments to an assisted-injected Metro [ViewModel] in [NavDisplay].
+ */
+@Composable
+@Preview
+fun MetroViewModelsContent(metroVmf: MetroViewModelFactory? = null) {
+    val backStack = rememberSaveable { mutableStateListOf<Any>(RouteA) }
 
-            CompositionLocalProvider(LocalMetroViewModelFactory provides metroVmf) {
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
+    val content: @Composable () -> Unit = {
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
 
-                    // In order to add the `ViewModelStoreNavEntryDecorator` (see comment below for why)
-                    // we also need to add the default `NavEntryDecorator`s as well. These provide
-                    // extra information to the entry's content to enable it to display correctly
-                    // and save its state.
-                    entryDecorators = listOf(
-                        rememberSaveableStateHolderNavEntryDecorator(),
-                        rememberViewModelStoreNavEntryDecorator()
-                    ),
-                    entryProvider = entryProvider {
-                        entry<RouteA> {
-                            ContentGreen("Welcome to Nav3") {
-                                LazyColumn {
-                                    items(10) { i ->
-                                        Button(onClick = dropUnlessResumed {
-                                            backStack.add(RouteB("$i"))
-                                        }) {
-                                            Text("$i")
-                                        }
-                                    }
+            // In order to add the `ViewModelStoreNavEntryDecorator` (see comment below for why)
+            // we also need to add the default `NavEntryDecorator`s as well. These provide
+            // extra information to the entry's content to enable it to display correctly
+            // and save its state.
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                entry<RouteA> {
+                    ContentGreen("Welcome to Nav3") {
+                        LazyColumn {
+                            items(10) { i ->
+                                Button(onClick = dropUnlessResumed {
+                                    backStack.add(RouteB("$i"))
+                                }) {
+                                    Text("$i")
                                 }
                             }
                         }
-                        entry<RouteB> { key ->
-                            val viewModel: RouteBViewModel = assistedMetroViewModel<RouteBViewModel, RouteBViewModel.Factory> {
-                                create(key)
-                            }
-                            ScreenB(viewModel = viewModel)
-                        }
                     }
-                )
+                }
+                entry<RouteB> { key ->
+                    val viewModel: RouteBViewModel = assistedMetroViewModel<RouteBViewModel, RouteBViewModel.Factory> {
+                        create(key)
+                    }
+                    ScreenB(viewModel = viewModel)
+                }
             }
-        }
+        )
+    }
 
+    if (metroVmf != null) {
+        CompositionLocalProvider(LocalMetroViewModelFactory provides metroVmf) {
+            content()
+        }
+    } else {
+        content()
     }
 }
 
